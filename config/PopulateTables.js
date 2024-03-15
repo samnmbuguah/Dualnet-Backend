@@ -1,17 +1,16 @@
 const Contracts = require('../models/FuturesModel.js');
 const Currencies = require('../models/SpotModel.js');
 const MatchingPairs = require('../models/MatchingPairsModel.js');
-const {fetchSpotPairs, fetchFuturesContracts, findMatchingPairs} = require( '../Services/GateioServices.js');
+const {fetchSpotPairs, fetchFuturesContracts, findMatchingPairs} = require( '../services/GateioServices.js');
 async function populateTables() {
     try {
-        // const spotPairs = await fetchSpotPairs();
-        // const futuresContracts = await fetchFuturesContracts();
+        const spotPairs = await fetchSpotPairs();
+        const futuresContracts = await fetchFuturesContracts();
 
-        // // Assuming spotPairs and futuresContracts are arrays of objects
-        // // where each object's keys match the fields of your models
+        // Insert data into tables
 
-        // await Currencies.bulkCreate(spotPairs);
-        // await Contracts.bulkCreate(futuresContracts);
+        await Currencies.bulkCreate(spotPairs);
+        await Contracts.bulkCreate(futuresContracts);
 
         // Find matching pairs
         const matchingPairs = await findMatchingPairs();
