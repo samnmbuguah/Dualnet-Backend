@@ -54,10 +54,10 @@ function findMatchingPairs() {
     .catch(error => console.error(error));
 }
 
-// Call the function
-findMatchingPairs()
-.then(matchingPairs => console.log('Matching pairs: ', matchingPairs.length, matchingPairs[0]))
-.catch(error => console.error(error));
+// // Call the function
+// findMatchingPairs()
+// .then(matchingPairs => console.log('Matching pairs: ', matchingPairs.length, matchingPairs[0]))
+// .catch(error => console.error(error));
 
 module.exports = {
     fetchSpotPairs,
