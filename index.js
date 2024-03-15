@@ -1,3 +1,5 @@
+const cron = require('node-cron');
+const populateTables = require('./jobs/PopulateTables.js');
 const express = require('express');
 const app = express();
 const http = require('http').Server(app);
@@ -10,6 +12,8 @@ const io = require('socket.io')(http,{
             });
 const dotenv = require("dotenv");
 const db = require("./config/Database.js");
+require('./config/Dbsync.js');
+require('./services/StreamPrices.js');
 const router = require("./routes/index.js");
 
 dotenv.config();
@@ -79,6 +83,8 @@ io.on('connect', (client) => {
     });
 });
 
+
+cron.schedule('0 * * * *', populateTables);
 
 // All other GET requests not handled before will return our React app
 // app.get('*', (req, res) => {                                                     //production mode                    
