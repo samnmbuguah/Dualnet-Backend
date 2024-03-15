@@ -1,5 +1,6 @@
 const WebSocket = require('ws');
 const crypto = require('crypto');
+const Scans = require('../models/ScansModel.js');
 
 // WebSocket class
 class GateWebSocket {
@@ -84,11 +85,21 @@ class GateWebSocket {
 
         Object.keys(this.lastPrices).forEach(ticker => {
             if (this.lastPrices[ticker].futures && this.lastPrices[ticker].spot) {
-                if (this.lastPrices[ticker].futures > this.lastPrices[ticker].spot) {
-                    let percentageDifference = ((this.lastPrices[ticker].futures - this.lastPrices[ticker].spot) / this.lastPrices[ticker].spot) * 100;
-                    percentageDifference = parseFloat(percentageDifference.toFixed(4));
-                    console.log('Percentage difference between futures and spot for', ticker, ':', percentageDifference);
-                }
+                const futuresPrice = this.lastPrices[ticker].futures;
+                const spotPrice = this.lastPrices[ticker].spot;
+                const valueDifference = futuresPrice - spotPrice;
+                let percentageDifference = ((futuresPrice - spotPrice) / spotPrice) * 100;
+                percentageDifference = parseFloat(percentageDifference.toFixed(4));
+
+                Scans.upsert({
+                    ticker: ticker,
+                    futuresPrice: futuresPrice,
+                    spotPrice: spotPrice,
+                    valueDifference: valueDifference,
+                    percentageDifference: percentageDifference
+                });
+
+                console.log('Percentage difference between futures and spot for', ticker, ':', percentageDifference);
             }
         });
         console.log('Last prices:', this.lastPrices);
