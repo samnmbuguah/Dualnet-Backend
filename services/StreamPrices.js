@@ -1,4 +1,4 @@
-const GateWebSocket = require('./StreamPrices.js');
+const GateWebSocket = require('./GateWebSocket.js');
 const MatchingPairs = require('../models/MatchingPairsModel.js');
 require('dotenv').config();
 
