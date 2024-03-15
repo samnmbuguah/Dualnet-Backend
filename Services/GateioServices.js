@@ -6,6 +6,7 @@ const API_SECRET = process.env.API_SECRET;
 
 client.setApiKeySecret(API_KEY, API_SECRET);
 const api = new GateApi.AccountApi(client);
+
 // //Get account details
 // api.getAccountDetail()
 //    .then(value => console.log('API called successfully. Returned data: ', value.body),
@@ -32,24 +33,26 @@ function fetchSpotPairs() {
 }
 
 // Function to find spot pairs whose id matches with a futures contract 'name' field
-const MatchingPairs = require('../models/MatchingPairsModel.js');
 function findMatchingPairs() {
     return Promise.all([fetchFuturesContracts(), fetchSpotPairs()])
     .then(([futuresContracts, spotPairs]) => {
-        const matchingPairs = spotPairs.filter(spotPair => 
-            futuresContracts.some(futuresContract => futuresContract.name === spotPair.id)
-            );
-            
-            const unmatchedFutures = futuresContracts.filter(futuresContract => 
-                !spotPairs.some(spotPair => spotPair.id === futuresContract.name)
-                );
-                
-                console.log('Unmatched futures: ', unmatchedFutures.map(contract => contract.name));
-                
-                return matchingPairs;
-            })
-            .catch(error => console.error(error));
-        }
+        const matchingPairs = spotPairs
+            .filter(spotPair => futuresContracts.some(futuresContract => futuresContract.name === spotPair.id))
+            .map(spotPair => {
+                const futuresContract = futuresContracts.find(contract => contract.name === spotPair.id);
+                return { ...spotPair, ...futuresContract };
+            });
+
+        const unmatchedFutures = futuresContracts.filter(futuresContract => 
+            !spotPairs.some(spotPair => spotPair.id === futuresContract.name)
+        );
+
+        console.log('Unmatched futures: ', unmatchedFutures.map(contract => contract.name));
+
+        return matchingPairs;
+    })
+    .catch(error => console.error(error));
+}
 
 // Call the function
 findMatchingPairs()
