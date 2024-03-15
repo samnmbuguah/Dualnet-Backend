@@ -4,7 +4,10 @@ const Contracts = require('../models/FuturesModel.js');
 const Currencies = require('../models/SpotModel.js');
 const MatchingPairs = require('../models/MatchingPairsModel.js');
 const UserPDFs = require('../models/UserPDFsModel.js');
+const Scans = require('../models/ScansModel.js');
 
 db.sync()
     .then(() => console.log('Tables have been created'))
     .catch(error => console.log('Error occurred:', error));
+
+// db.sync({ alter: true })
