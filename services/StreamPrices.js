@@ -1,4 +1,7 @@
-const GateWebSocket = require('./GateWebSocket.js');
+let GateWebSocket;
+module.exports = function(io) {
+    GateWebSocket = require('./GateWebSocket.js')(io);
+}
 const MatchingPairs = require('../models/MatchingPairsModel.js');
 require('dotenv').config();
 
