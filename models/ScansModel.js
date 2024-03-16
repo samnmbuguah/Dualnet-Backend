@@ -2,7 +2,7 @@ const { Sequelize } = require("sequelize");
 const db = require("../config/Database.js");
 
 const Scans = db.define('Scans', {
-    ticker: {
+    matchingPairId: {
         type: Sequelize.STRING,
         primaryKey: true
     },
