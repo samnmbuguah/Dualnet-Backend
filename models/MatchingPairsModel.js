@@ -3,7 +3,6 @@ const db = require("../config/Database.js");
 
 const Contracts = require("./FuturesModel.js");
 const Currencies = require("./SpotModel.js");
-
 // Define the MatchingPairs model
 const MatchingPairs = db.define('MatchingPairs', {
     id: {
