@@ -22,12 +22,29 @@ async function populateTables() {
         const matchingPairFields = getAllModelFields(MatchingPairs);
 
         // Insert data into tables
-        await Currencies.bulkCreate(spotPairs, { updateOnDuplicate: currencyFields });
-        await Contracts.bulkCreate(futuresContracts, { updateOnDuplicate: contractFields });
+        if (currencies && currencies.length > 0) {
+            await Currencies.bulkCreate(currencies, { updateOnDuplicate: currencyFields });
+        } else {
+            console.error('No currencies data to populate');
+        }
+        if (matchingPairs) { // Add opening parenthesis here
+            const matchingPairs = await findMatchingPairs();
+            await MatchingPairs.bulkCreate(matchingPairs, { updateOnDuplicate: matchingPairFields });
+        }
 
-        // Find matching pairs
-        const matchingPairs = await findMatchingPairs();
-        await MatchingPairs.bulkCreate(matchingPairs, { updateOnDuplicate: matchingPairFields });
+        // Fetch fundingRate from MatchingPairs and update Scans
+        for (let pair of matchingPairs) {
+            const matchingPair = await MatchingPairs.findOne({ where: { id: pair.id } });
+            if (matchingPair) {
+                const fundingRate = matchingPair.fundingRate;
+                const scan = await Scans.findOne({ where: { matchingPairId: pair.id } }); // assuming matchingPairId is the foreign key in Scans table
+                if (scan) {
+                    await scan.update({ fundingRate: fundingRate });
+                    console.log("Updated funding rate for matching pair",scan )
+                }
+            }
+        }
+            
 
         console.log('Tables have been populated');
     } catch (error) {
@@ -36,7 +53,6 @@ async function populateTables() {
 }
 
 module.exports = populateTables;
-
 // Run the task immediately
 // populateTables();
 
