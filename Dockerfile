@@ -1,0 +1,6 @@
+FROM mysql:8.0
+ENV MYSQL_ROOT_PASSWORD arbitrage
+ENV MYSQL_DATABASE dualnet_db
+ENV MYSQL_USER dualnetadmin
+ENV MYSQL_PASSWORD arbitrage
+EXPOSE 3306
