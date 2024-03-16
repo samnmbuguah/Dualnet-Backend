@@ -1,4 +1,6 @@
 const cron = require('node-cron');
+const Scans = require("./models/ScansModel.js"); 
+const { Op } = require("sequelize");
 const populateTables = require('./jobs/PopulateTables.js');
 const express = require('express');
 const app = express();
@@ -7,7 +9,7 @@ const path = require("path");
 const cors = require('cors');
 const io = require('socket.io')(http,{
                 cors: {
-                    origin: 'http://localhost:3000',
+                    origin: '*',
                 }
             });
 const dotenv = require("dotenv");
@@ -15,7 +17,7 @@ const db = require("./config/Database.js");
 const router = require("./routes/index.js");
 
 dotenv.config();
-const PORT = process.env.PORT || 3001;
+const PORT =3001;
 const { fileURLToPath } = require('url');
 const { getAccountsByUserid } = require('./controllers/Users.js')
 const {init, getAccountInfo, getAgentInfo, getAccountIdsByPageNum } = require('./controllers/MTAPI.js'); 
@@ -88,8 +90,7 @@ io.on('connect', (client) => {
     await populateTables();
 
 })();
-require('./services/StreamPrices.js');
-
+require('./services/StreamPrices.js')(io);
 
 cron.schedule('0 * * * *', populateTables);
 
