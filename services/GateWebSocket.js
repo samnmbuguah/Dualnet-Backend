@@ -92,7 +92,7 @@ class GateWebSocket {
                 percentageDifference = parseFloat(percentageDifference.toFixed(4));
 
                 Scans.upsert({
-                    ticker: ticker,
+                    matchingPairId: ticker,
                     futuresPrice: futuresPrice,
                     spotPrice: spotPrice,
                     valueDifference: valueDifference,
