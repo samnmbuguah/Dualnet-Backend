@@ -12,8 +12,6 @@ const io = require('socket.io')(http,{
             });
 const dotenv = require("dotenv");
 const db = require("./config/Database.js");
-require('./config/Dbsync.js');
-require('./services/StreamPrices.js');
 const router = require("./routes/index.js");
 
 dotenv.config();
@@ -28,6 +26,8 @@ try {
 } catch (error) {
     console.error(error);
 }
+require('./config/Dbsync.js');
+
 // Have Node serve the files for our built React app
 // const __filename = fileURLToPath(import.meta.url);
 // const __dirname = path.dirname(__filename);
@@ -82,6 +82,13 @@ io.on('connect', (client) => {
         clearInterval(myInterval2);
     });
 });
+
+
+(async () => {
+    await populateTables();
+
+})();
+require('./services/StreamPrices.js');
 
 
 cron.schedule('0 * * * *', populateTables);
