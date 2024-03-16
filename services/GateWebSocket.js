@@ -2,6 +2,7 @@ const WebSocket = require('ws');
 const crypto = require('crypto');
 const Scans = require('../models/ScansModel.js');
 const { Op } = require("sequelize");
+const onScansUpdated = require('./ScansServer.js');
 
 
 // WebSocket class
@@ -113,6 +114,8 @@ module.exports = function (io) {
                         });
                         console.log('Top 10 scans:', topScans.map(scan => scan.dataValues));
                         this.io.emit('scansUpdated', topScans);
+                        onScansUpdated(topScans);
+
                     });
 
                     console.log('Percentage difference between futures and spot for', ticker, ':', percentageDifference);
