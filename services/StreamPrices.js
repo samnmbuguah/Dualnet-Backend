@@ -27,7 +27,7 @@ const retryDelay = 5000; // 5 seconds
 function fetchMatchingPairs() {
     try {
         MatchingPairs.findAll({
-            limit: 5
+            limit: 10
         }).then(records => {
             if (!records) {
                 console.error('No records found');
