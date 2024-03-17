@@ -1,7 +1,0 @@
-{
-    "name": "legendary meme",
-    "dockerComposeFile": "../docker-compose.yml",
-    "service": "db",
-    "workspaceFolder": "/workspace/Dualnet-Backend",
-    "forwardPorts": [3306]
-}
