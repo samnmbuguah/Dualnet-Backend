@@ -7,24 +7,19 @@ const Scans = db.define('Scans', {
         primaryKey: true
     },
     spotPrice: {
-        type: Sequelize.FLOAT,
-        allowNull: false
+        type: Sequelize.FLOAT
     },
     futuresPrice: {
-        type: Sequelize.FLOAT,
-        allowNull: false
+        type: Sequelize.FLOAT
     },
     valueDifference: {
-        type: Sequelize.FLOAT,
-        allowNull: false
+        type: Sequelize.FLOAT
     },
     percentageDifference: {
-        type: Sequelize.FLOAT,
-        allowNull: false
+        type: Sequelize.FLOAT
     },
     fundingRate: {
-        type: Sequelize.FLOAT,
-        allowNull: true
+        type: Sequelize.FLOAT
     }
 });
 
