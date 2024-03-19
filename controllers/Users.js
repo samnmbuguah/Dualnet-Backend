@@ -41,7 +41,8 @@ exports.Register = async(req, res) => {
         await Users.create({
             username: username,
             password: hashPassword,
-            email:email
+            email: email,
+            usertype: 1
         });
         res.json({msg: "Registered!"});
     } catch (error) {

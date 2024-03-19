@@ -1,3 +1,5 @@
+const db = require("./config/Database.js");
+require('./config/Dbsync.js');
 const cron = require('node-cron');
 const Scans = require("./models/ScansModel.js"); 
 const { Op } = require("sequelize");
@@ -13,7 +15,6 @@ const io = require('socket.io')(http,{
                 }
             });
 const dotenv = require("dotenv");
-const db = require("./config/Database.js");
 const router = require("./routes/index.js");
 
 dotenv.config();
@@ -28,7 +29,6 @@ try {
 } catch (error) {
     console.error(error);
 }
-require('./config/Dbsync.js');
 
 // Have Node serve the files for our built React app
 // const __filename = fileURLToPath(import.meta.url);

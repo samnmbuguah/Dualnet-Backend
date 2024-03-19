@@ -58,7 +58,7 @@ async function populateTables() {
                     let scan = await Scans.findOne({ where: { matchingPairId: pair.id } }); // assuming matchingPairId is the foreign key in Scans table
                     if (scan) {
                         await scan.update({ fundingRate: fundingRate });
-                        console.log("Updated funding rate for matching pair", scan);
+                        console.log("Updated funding rate for matching pair", pair.id);
                     }
                 }
             }
