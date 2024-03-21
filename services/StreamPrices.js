@@ -57,10 +57,15 @@ fetchMatchingPairs();
 process.on('SIGINT', function () {
     console.log("Caught interrupt signal, closing websockets");
 
-    // Close all WebSocket connections
-    for (let websocket of ws.webSockets) {
-        websocket.close();
+    // Check if ws and ws.webSockets are defined before trying to close the WebSocket connections
+    if (ws && ws.webSockets) {
+        for (let websocket of ws.webSockets) {
+            websocket.close();
+        }
+    } else {
+        console.error('ws or ws.webSockets is undefined');
     }
+
     // Exit the process
     process.exit();
 });
