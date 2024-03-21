@@ -1,33 +1,32 @@
-import path from 'path';
-import webpack from 'webpack';
+const webpack = require('webpack');
 
-
-
-const environment = 'production';//process.env.ENVIRONMENT;
-
-console.log('environment:::::', environment);
+const environment = process.env.ENVIRONMENT;
+const port = process.env.PORT;
 
 let ENVIRONMENT_VARIABLES = {
-  'process.env.ENVIRONMENT': JSON.stringify('development'),
-  'process.env.PORT': JSON.stringify('3000'),
-  // 'process.env.MONGO_CONNECTION_STRING': JSON.stringify('mongodb://mongo-db:27017')
+  'process.env.ENVIRONMENT': JSON.stringify(environment || 'development'),
+  'process.env.PORT': JSON.stringify(port || '3000'),
 };
+console.log('environment:::::', environment);
 
 if (environment === 'test') {
   ENVIRONMENT_VARIABLES = {
-    'process.env.ENVIRONMENT': JSON.stringify('test'),
-    'process.env.PORT': JSON.stringify('3000'),
-    // 'process.env.MONGO_CONNECTION_STRING': JSON.stringify('mongodb://mongo-db:27017')
+    'process.env.ENVIRONMENT': JSON.stringify(environment),
+    'process.env.PORT': JSON.stringify(port || '3001'),
   };
 } else if (environment === 'production') {
   ENVIRONMENT_VARIABLES = {
-    'process.env.ENVIRONMENT': JSON.stringify('production'),
-    'process.env.PORT': JSON.stringify('3000'),
-    // 'process.env.MONGO_CONNECTION_STRING': JSON.stringify('mongodb+srv://Tester123:51FWAl9CFZuJe9xF@todo-cluster.dc3nz.mongodb.net/todos?retryWrites=true&w=majority')
+    'process.env.ENVIRONMENT': JSON.stringify(environment),
+    'process.env.PORT': JSON.stringify(port || '3042'),
+  };
+} else {
+  ENVIRONMENT_VARIABLES = {
+    'process.env.ENVIRONMENT': JSON.stringify(environment || 'development'),
+    'process.env.PORT': JSON.stringify(port || '3000'),
   };
 }
 
-export default {
+module.exports = {
   entry: './index.js',
   output: {
     path: '/dist', //path.resolve(__dirname, 'dist'),
