@@ -1,4 +1,4 @@
-const bcrypt = require( "bcrypt");
+const bcrypt = require( "bcryptjs");
 const jwt = require( "jsonwebtoken");
 const { Op, Sequelize } = require( "sequelize");
 const Users = require( "../models/UserModel.js");
@@ -42,7 +42,6 @@ exports.Register = async(req, res) => {
             username: username,
             password: hashPassword,
             email: email,
-            usertype: 1
         });
         res.json({msg: "Registered!"});
     } catch (error) {
@@ -460,42 +459,41 @@ async function updateAssociatedUsersWithAdminValues(adminId) {
     throw error;
   }
 }
-  
 exports.adminCommissionCalculation = async (req,res) => {
-    const { user_id } = req.params;
-  try {
-    let admin_id = user_id;
-    const admin = Users.findOne({
-      id: admin_id,
-    });
+        const { user_id } = req.params;
+    try {
+        let admin_id = user_id;
+        const admin = Users.findOne({
+            id: admin_id,
+        });
 
-    const clientUsers = await Users.findAll({
-      where: {
-        admin_id: admin_id,
-      },
-    });
+        const clientUsers = await Users.findAll({
+            where: {
+                Admin_id: admin_id, // Corrected here
+            },
+        });
 
-    let totalAdminCommission = 0;
+        let totalAdminCommission = 0;
 
-    for (const client of clientUsers) {
-      const netClientSharePercent = client.Net_client_share_in_percent;
-      // Calculate commission as a percentage of profit
-      const commissionPercentage = 100 - netClientSharePercent;
-      const adminCommission = (commissionPercentage / 100) * client.profit_now;
+        for (const client of clientUsers) {
+            const netClientSharePercent = client.Net_client_share_in_percent;
+            // Calculate commission as a percentage of profit
+            const commissionPercentage = 100 - netClientSharePercent;
+            const adminCommission = (commissionPercentage / 100) * client.profit_now;
 
-      totalAdminCommission += adminCommission;
+            totalAdminCommission += adminCommission;
+        }
+
+        if (res) {
+                res.status(200).json({ totalAdminCommission:totalAdminCommission });
+            } else {
+                console.log("not a admin",totalAdminCommission);
+            }
+        return totalAdminCommission;
+    } catch (error) {
+        console.error("Error calculating admin commission:", error.message);
+        throw error;
     }
-
-    if (res) {
-        res.status(200).json({ totalAdminCommission:totalAdminCommission });
-      } else {
-        console.log("not a admin",totalAdminCommission);
-      }
-    return totalAdminCommission;
-  } catch (error) {
-    console.error("Error calculating admin commission:", error.message);
-    throw error;
-  }
 };
 
 // exports.updateAdminTempAssets=async (req,res)=> {
