@@ -3,8 +3,11 @@
   "version": "1.0.0",
   "main": "index.js",
   "scripts": {
-    "start": "nodemon index.js",
-    "build": " webpack",
+    "build": "npm run build --prefix client && npm run build --prefix server",
+    "start": "node server/build/index.js",
+    "dbsync": "node config/Dbsync.js",
+    "populateTables": "node jobs/PopulateTables.js",
+    "testDb": "node config/testDbConnection.js",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "private": true,
@@ -13,7 +16,7 @@
   "dependencies": {
     "babel-core": "^7.0.0-bridge.0",
     "babel-loader": "8",
-    "bcrypt": "^5.1.0",
+    "bcryptjs": "^2.4.3",
     "cors": "^2.8.5",
     "crypto": "^1.0.1",
     "dotenv": "^10.0.0",
@@ -26,7 +29,8 @@
     "pdf-lib": "^1.17.1",
     "pdfkit": "^0.14.0",
     "pg": "^8.11.3",
-    "rxjs": "^7.8.1",
+    "pg-hstore": "^2.3.4",
+    "punycode": "^2.3.1",
     "sequelize": "^6.37.1",
     "socket.io": "^4.5.4",
     "webpack": "^5.75.0",
