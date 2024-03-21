@@ -4,8 +4,16 @@ const db = new Sequelize('railway', 'postgres', 'VFwQxOHkqOHYTsGCGjifjqJGOGlCWPZ
     host: 'viaduct.proxy.rlwy.net',
     dialect: 'postgres',
     port: 16646,
-    ssl: {
-        rejectUnauthorized: false
+    pool: {
+        max: 5,
+        min: 0,
+        acquire: 60000,
+        idle: 10000
+    },
+    dialectOptions: {
+        ssl: {
+            rejectUnauthorized: false
+        }
     }
 });
 
