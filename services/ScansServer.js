@@ -1,7 +1,9 @@
 const WebSocket = require('ws');
 
 // Create a WebSocket server
-const wss = new WebSocket.Server({ port: 3002 });
+const wss = new WebSocket.Server({ port: 3010 }, () => {
+    console.log('ScansServer is listening on port 3010');
+ });
 
 // This function will be called whenever scans are updated
 function onScansUpdated(topScans) {
@@ -26,5 +28,18 @@ wss.on('connection', function connection(ws) {
     });
 });
 
+process.on('SIGINT', function () {
+    console.log("Caught interrupt signal, closing websockets");
+
+    // Close all WebSocket connections
+    wss.clients.forEach(function each(client) {
+        if (client.readyState === WebSocket.OPEN) {
+            client.close();
+        }
+    });
+
+    // Exit the process
+    process.exit();
+});
 // Export the onScansUpdated function so it can be used in other files
 module.exports = onScansUpdated;
