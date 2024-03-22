@@ -5,16 +5,10 @@ const API_KEY= process.env.API_KEY;
 const API_SECRET = process.env.API_SECRET;
 
 client.setApiKeySecret(API_KEY, API_SECRET);
-const api = new GateApi.AccountApi(client);
-
-// //Get account details
-// api.getAccountDetail()
-//    .then(value => console.log('API called successfully. Returned data: ', value.body),
-//        error => console.error(error));
-
 
 //Fetch all futures contracts
 function fetchFuturesContracts() {
+    console.log('Fetching futures contracts...');
     const futuresApi = new GateApi.FuturesApi(client);
     const settle = "usdt"
     
@@ -25,6 +19,7 @@ function fetchFuturesContracts() {
 
 //Fetch all Spot pairs
 function fetchSpotPairs() {
+    console.log('Fetching spot pairs...');
     const spotApi = new GateApi.SpotApi(client);
     
     return spotApi.listCurrencyPairs()
@@ -36,31 +31,41 @@ function fetchSpotPairs() {
 function findMatchingPairs() {
     return Promise.all([fetchFuturesContracts(), fetchSpotPairs()])
     .then(([futuresContracts, spotPairs]) => {
-        const matchingPairs = spotPairs
-            .filter(spotPair => futuresContracts.some(futuresContract => futuresContract.name === spotPair.id))
-            .map(spotPair => {
-                const futuresContract = futuresContracts.find(contract => contract.name === spotPair.id);
-                return { ...spotPair, ...futuresContract };
-            });
+        const futuresContractsMap = new Map();
+        futuresContracts.forEach(contract => futuresContractsMap.set(contract.name, contract));
 
-        const unmatchedFutures = futuresContracts.filter(futuresContract => 
-            !spotPairs.some(spotPair => spotPair.id === futuresContract.name)
-        );
-
-        console.log('Unmatched futures: ', unmatchedFutures.map(contract => contract.name));
-
-        return matchingPairs;
+        return spotPairs
+            .filter(spotPair => futuresContractsMap.has(spotPair.id))
+            .map(spotPair => ({
+                id: spotPair.id,
+                fundingRate: futuresContractsMap.get(spotPair.id).fundingRate,
+                name: futuresContractsMap.get(spotPair.id).name,
+                precision: spotPair.precision,
+                amountPrecision: spotPair.amountPrecision,
+                fee: spotPair.fee,
+            }));
     })
     .catch(error => console.error(error));
 }
 
-// // Call the function
+// // Call fetchSpotPairs
+// fetchSpotPairs()
+//     .then(spotPairs => console.log(spotPairs[0]))
+//     .catch(error => console.error(error));
+
+// // Call fetchFuturesContracts
+// fetchFuturesContracts()
+//     .then(futuresContracts => console.log(futuresContracts[0]))
+//     .catch(error => console.error(error));
+
+// // Call findMatchingPairs
 // findMatchingPairs()
 // .then(matchingPairs => console.log('Matching pairs: ', matchingPairs.length, matchingPairs[0]))
 // .catch(error => console.error(error));
 
-module.exports = {
-    fetchSpotPairs,
-    fetchFuturesContracts,
-    findMatchingPairs
-};
+// const api = new GateApi.AccountApi(client);
+// //Get account details
+// api.getAccountDetail()
+//    .then(value => console.log('API called successfully. Returned data: ', value.body),
+//        error => console.error(error));
+module.exports = findMatchingPairs;
