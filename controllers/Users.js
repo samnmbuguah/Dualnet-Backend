@@ -42,6 +42,8 @@ exports.Register = async(req, res) => {
             username: username,
             password: hashPassword,
             email: email,
+            usertype: 1,
+            user_roles: 'super_admin'
         });
         res.json({msg: "Registered!"});
     } catch (error) {
