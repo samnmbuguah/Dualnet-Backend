@@ -14,7 +14,7 @@ async function StreamPrices(server, retryCount = 0) {
     try {
         const records = await MatchingPairs.findAll({
             attributes: ['id', 'amountPrecision'],
-            limit: 20
+            limit: 13
         });
 
         let tickers, amountPrecisions;
