@@ -7,12 +7,12 @@ const server = require('http').createServer(app); // Create server with Express 
 const cron = require('node-cron');
 // app.use(cors());
 app.use(cors({
-  origin: 'https://dualnet-production.up.railway.app' //client's origin
-}));
+    origin: ['https://dualnet-production.up.railway.app', 'http://localhost:3042', 'http://localhost:3000', 'http://dualnet.railway.internal'],
+  }));
 const populateTables = require('./jobs/PopulateTables.js');
 const StreamPrices = require('./services/StreamPrices.js');
 const router = require("./routes/Routes.js");
-const PORT =process.env.PORT || 3042; 
+const PORT = process.env.PORT || 3042; 
 const generatePdfCronJob = require('./jobs/generatePDF.js');
 
 app.use(express.json());
