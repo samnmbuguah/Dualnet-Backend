@@ -14,7 +14,7 @@ const {
 } = require("../controllers/Users.js");
 const { verifyToken, verifyAdminToken } = require("../middleware/VerifyToken.js");
 const { refreshToken } = require("../controllers/RefreshToken.js");
-const { getCurrencyInfo } = require("../controllers/MTAPI");
+const { getCurrencyInfo } = require("../controllers/MTAPI.js");
 
 const router = express.Router();
 
