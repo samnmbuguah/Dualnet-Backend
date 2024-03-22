@@ -1,71 +1,46 @@
-let GateWebSocket;
-module.exports = function(io) {
-    GateWebSocket = require('./GateWebSocket.js')(io);
-}
 const MatchingPairs = require('../models/MatchingPairsModel.js');
-require('dotenv').config();
+const PollPrices = require('./GateioPolling.js');
+const socketIO = require('socket.io');
 
-const API_KEY = process.env.API_KEY;
-const API_SECRET = process.env.API_SECRET;
-const wsFuturesUrl = 'wss://fx-ws.gateio.ws/v4/ws/usdt'
-const wsSpotUrl = 'wss://api.gateio.ws/ws/v4/'
-
-
-if (!API_KEY || !API_SECRET) {
-    console.error('API_KEY and API_SECRET are required');
-    process.exit(1);
-}
-
-// Create a new GateWebSocket instance
-let tickers = [];
-let ws;
-
-let retryCount = 0;
 const maxRetries = 5;
 const retryDelay = 5000; // 5 seconds
 
-function fetchMatchingPairs() {
+async function fetchAndLogPrices(pollPrices) {
+    const values = await pollPrices.getSpotAndFuturesPrice();
+    pollPrices.updateScans(values);
+}
+
+async function StreamPrices(server, retryCount = 0) {
     try {
-        MatchingPairs.findAll({
-            limit: 10
-        }).then(records => {
-            if (!records) {
-                console.error('No records found');
-                return;
-            }
-            tickers = records.map(record => record.id);
-            if (!tickers || tickers.length === 0) {
-                tickers = ['BTC_USDT',"ETH_USDT"];
-            }
-            ws = new GateWebSocket([wsFuturesUrl, wsSpotUrl], API_KEY, API_SECRET, tickers);
+        const records = await MatchingPairs.findAll({
+            attributes: ['id', 'amountPrecision'],
+            limit: 20
         });
+
+        let tickers, amountPrecisions;
+        if (!records || records.length === 0) {
+            console.error('No matching pairs found in the database. Using default tickers...');
+            tickers = ['BTC_USDT', "ETH_USDT"];
+            amountPrecisions = [2, 2]; // default values
+        } else {
+            tickers = records.map(record => record.id);
+            amountPrecisions = records.map(record => record.amountPrecision);
+        }
+
+        const io = socketIO(server); //socketIO initialization
+        // Pass parameters to PollPrices constructor
+        const pollPrices = new PollPrices(tickers, "usdt", io, amountPrecisions, server); 
+        fetchAndLogPrices(pollPrices);
+        setInterval(() => fetchAndLogPrices(pollPrices), 60000);
     } catch (error) {
         console.error('An error occurred:', error);
         if (retryCount < maxRetries) {
-            retryCount++;
             console.log(`Retrying in ${retryDelay / 1000} seconds...`);
-            setTimeout(fetchMatchingPairs, retryDelay);
+            setTimeout(() => StreamPrices(server, retryCount + 1), retryDelay); 
         } else {
             console.error('Max retries exceeded. Exiting...');
             process.exit(1);
         }
     }
 }
-
-fetchMatchingPairs();
-
-process.on('SIGINT', function () {
-    console.log("Caught interrupt signal, closing websockets");
-
-    // Check if ws and ws.webSockets are defined before trying to close the WebSocket connections
-    if (ws && ws.webSockets) {
-        for (let websocket of ws.webSockets) {
-            websocket.close();
-        }
-    } else {
-        console.error('ws or ws.webSockets is undefined');
-    }
-
-    // Exit the process
-    process.exit();
-});
+module.exports = StreamPrices;
