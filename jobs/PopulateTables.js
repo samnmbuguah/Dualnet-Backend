@@ -1,3 +1,5 @@
+const dotenv = require('dotenv');
+dotenv.config();
 const cron = require('node-cron');
 const MatchingPairs = require('../models/MatchingPairsModel.js');
 const Scans = require('../models/ScansModel.js');
