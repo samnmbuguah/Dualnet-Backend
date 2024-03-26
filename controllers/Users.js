@@ -330,7 +330,7 @@ const getUserList = async(type=0) => {
 
                 ],
                 order: [
-                    [db.cast(db.col('account_no'), 'SIGNED'), 'ASC'],
+                    [db.cast(db.col('account_no'), 'INTEGER'), 'ASC'],
                 ],
                 // offset: offset, limit: Number(req.query.limit)
             }
@@ -364,7 +364,7 @@ const getUserList = async(type=0) => {
 
             ],         
             order: [
-                [db.cast(db.col('account_no'), 'SIGNED'), 'ASC'],
+                [db.cast(db.col('account_no'), 'INTEGER'), 'ASC'],
                 // To sort in descending order, use ['account_no', 'DESC']
             ],
             // offset: offset, limit: Number(req.query.limit)
@@ -431,7 +431,7 @@ async function getUsersByAdminId(adminId) {
       // Handle any errors, e.g., by logging or throwing an exception
       throw error;
     }
-  }
+}
   
 
 async function updateAssociatedUsersWithAdminValues(adminId) {
@@ -466,7 +466,9 @@ exports.adminCommissionCalculation = async (req,res) => {
     try {
         let admin_id = user_id;
         const admin = Users.findOne({
-            id: admin_id,
+            where: {
+                id: admin_id,
+            },
         });
 
         const clientUsers = await Users.findAll({
