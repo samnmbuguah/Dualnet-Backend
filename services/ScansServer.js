@@ -1,48 +1,59 @@
-const WebSocket = require('ws');
+const http = require('http');
+const socketIo = require('socket.io');
 
-let wss;
+let io;
 
 function onScansUpdated(server, topScans) {
-    if (!wss) {
-        wss = new WebSocket.Server({ server }, () => {
-            console.log('ScansServer is listening on the same port as the HTTP server');
-        });
+    if (!io) {
+        io = socketIo(server);
 
-        wss.on('connection', ws => {
+        io.on('connection', socket => {
             console.log('Client connected');
+            socket.on('buttonClicked', async () => {
+                const topScans = await Scans.findAll({
+                    where: {
+                        percentageDifference: {
+                            [Op.gt]: 0 // filters out records with negative percentageDifference
+                        }
+                    },
+                    order: [['percentageDifference', 'DESC']], // sorts by percentageDifference from highest to lowest
+                    limit: 5 // gets the first 5 records
+                });
+                console.log('Top scans updated:');
+                const data = JSON.stringify(topScans);
+                console.dir(JSON.parse(data), { depth: null, colors: true }); 
+                socket.emit('message', data);
+            });
 
-            // Send topScans to the client right after connection
             const data = JSON.stringify(topScans);
-            ws.send(data, error => {
-                if (error) {
-                    console.error('Failed to send message to client:', error);
-                }
-            });
+            console.dir(JSON.parse(data), { depth: null, colors: true }); 
+            socket.emit('message', data);
 
-            ws.on('message', message => {
+            socket.on('message', message => {
                 console.log('received: %s', message);
-                ws.send(message); // Echo back the message
             });
 
-            ws.on('error', error => {
-                console.error('Error from client:', error);
-            });
-
-            ws.on('close', () => {
+            socket.on('disconnect', () => {
                 console.log('Client disconnected');
             });
+
+            socket.on('error', error => {
+                console.error('Socket error:', error); 
+            });
+        });
+
+        io.on('error', error => {
+            console.error('Server error:', error); 
         });
 
         process.on('SIGINT', () => {
-            console.log("Caught interrupt signal, closing websockets");
+            console.log("Caught interrupt signal, closing sockets");
 
-            wss.clients.forEach(client => {
-                if (client.readyState === WebSocket.OPEN) {
-                    try {
-                        client.close();
-                    } catch (error) {
-                        console.error('Failed to close client:', error);
-                    }
+            io.sockets.sockets.forEach(socket => {
+                try {
+                    socket.disconnect();
+                } catch (error) {
+                    console.error('Failed to disconnect socket:', error);
                 }
             });
 
@@ -51,14 +62,13 @@ function onScansUpdated(server, topScans) {
     }
 
     const data = JSON.stringify(topScans);
+    console.dir(JSON.parse(data), { depth: null, colors: true }); 
 
-    wss.clients.forEach(client => {
-        if (client.readyState === WebSocket.OPEN) {
-            try {
-                client.send(data);
-            } catch (error) {
-                console.error('Failed to send message to client:', error);
-            }
+    io.sockets.sockets.forEach(socket => {
+        try {
+            socket.emit('message', data);
+        } catch (error) {
+            console.error('Failed to send message to client:', error);
         }
     });
 }
