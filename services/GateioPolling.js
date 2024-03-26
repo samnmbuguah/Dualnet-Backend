@@ -42,14 +42,14 @@ class PollPrices {
                         return closeValue;
                     }, error => console.error(error));
 
-                return Promise.all([spotPromise, futuresPromise]);
+                return Promise.all([futuresPromise, spotPromise]);
             });
 
             return Promise.all(promises);
         } catch (error) {
             console.error(error);
         }
-    }  
+    } 
 
     async updateScans(values) {
         const upsertPromises = values.map((value, index) => {
@@ -78,9 +78,9 @@ class PollPrices {
                     }
                 },
                 order: [['percentageDifference', 'DESC']], // sorts by percentageDifference from highest to lowest
-                limit: 10 // gets the first 10 records
+                limit: 5 // gets the first 5 records
             });
-            console.log('Top scans updated:');
+            console.log('Top scans updated in the database');
             this.io.emit('All Prices Updated', topScans);
             onScansUpdated(this.server, topScans); // Pass server to onScansUpdated
         });
@@ -93,11 +93,7 @@ class PollPrices {
             percentageDifference = parseFloat(percentageDifference.toFixed(4));
             // console.log('Percentage difference between futures and spot for', ticker, ':', percentageDifference);
         });
-}
+    }
 }
 
 module.exports = PollPrices;
-
-
-
-
