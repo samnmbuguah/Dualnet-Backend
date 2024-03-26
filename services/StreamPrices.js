@@ -3,7 +3,7 @@ const PollPrices = require('./GateioPolling.js');
 const socketIO = require('socket.io');
 
 const maxRetries = 5;
-const retryDelay = 5000; // 5 seconds
+const retryDelay = 5000; 
 
 async function fetchAndLogPrices(pollPrices) {
     const values = await pollPrices.getSpotAndFuturesPrice();
@@ -14,7 +14,7 @@ async function StreamPrices(server, retryCount = 0) {
     try {
         const records = await MatchingPairs.findAll({
             attributes: ['id', 'amountPrecision'],
-            limit: 13
+            limit: 50
         });
 
         let tickers, amountPrecisions;
