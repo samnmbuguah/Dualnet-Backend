@@ -115,24 +115,15 @@ exports.UpdateUser = async(req,res)  =>{
                     password: data.password,
                     email:data.email,
                     account_no: data.account_no,
-                    api_token: adminUser.api_token,
-                    reward: adminUser.reward,
-                    reward_stopout: adminUser.reward_stopout,
-                    hedge: adminUser.hedge,
-                    hedge_stopout: adminUser.hedge_stopout,
                     wallet: data.wallet,
                     investment: data.investment,
                     usertype: data.usertype,
                     begin_date: data.begin_date,
                     fee: data.fee,
-                    usdt_account_number: data.usdt_account_number,
                     Net_client_share_in_percent: data.Net_client_share_in_percent,
-                    Total_assets_today: data.Total_assets_today,
                     profit_now: data.profit_now,
-                    Share_of_main_account_in_percent: data.Share_of_main_account_in_percent,
                     user_roles: data.user_roles,
                     Admin_id: data.Admin_id,
-                    temp_assets:data.temp_assets,
                   },
                   {
                     where: {
@@ -140,41 +131,28 @@ exports.UpdateUser = async(req,res)  =>{
                     },
                   }
                 );
-                  //update admin temp_assets
+                //update admin temp_assets
                 updateAdminTempAssets();
             }else {
                 return res.status(404).json({ msg: "Admin user not found" });
             }
         }
         else {
-
             await Users.update({
-                id              :data.id,
-                username        :data.username,
-                password        :data.password,
-                email           :data.email,
-                account_no      :data.account_no,
-                api_token       :data.api_token,
-                reward          :data.reward,
-                reward_stopout  :data.reward_stopout,
-                hedge           :data.hedge,
-                hedge_stopout   :data.hedge_stopout,
-                wallet          :data.wallet,
-                investment      :data.investment,
-                usertype        :data.usertype,
-                begin_date      :data.begin_date,
-                fee             :data.fee, 
-                usdt_account_number     :data.usdt_account_number,
-                Net_client_share_in_percent    :data.Net_client_share_in_percent,
-                Total_assets_today  :data.Total_assets_today,
-                profit_now      :data.profit_now,
-                Share_of_main_account_in_percent:data.Share_of_main_account_in_percent,
-                user_roles      :data.user_roles,
-                Admin_id         :data.Admin_id,
-                flash_main_assets :data.flash_main_assets,
-                flash_client_profit :data.flash_client_profit,
-                temp_assets      :data.temp_assets,
-
+                id: data.id,
+                username: data.username,
+                password: data.password,
+                email: data.email,
+                account_no: data.account_no,
+                wallet: data.wallet,
+                investment: data.investment,
+                usertype: data.usertype,
+                begin_date: data.begin_date,
+                fee: data.fee, 
+                Net_client_share_in_percent: data.Net_client_share_in_percent,
+                profit_now: data.profit_now,
+                user_roles: data.user_roles,
+                Admin_id: data.Admin_id,
             },{
                 where:{
                     id: data.id
@@ -182,7 +160,7 @@ exports.UpdateUser = async(req,res)  =>{
             });
             if(isAdminUser) {
                 await updateAssociatedUsersWithAdminValues(data.id);
-                  //update admin temp_assets
+                //update admin temp_assets
                 updateAdminTempAssets(); 
             }
         }
@@ -253,15 +231,12 @@ exports.getAccountsByUserid = async(id) => {
         return [];
     }
 }
-
-// get 2 metaaccountIds of user
 exports.getMetaAccountsByUserid = async(req,res) => {
     try {
-
         const id  = req.body.params.id;
         const accountIds = await Users.findAll(
             {
-                attributes:['reward','hedge'],
+                attributes:['username', 'account_no'],
                 where:{
                     id: id
                 },
@@ -269,13 +244,10 @@ exports.getMetaAccountsByUserid = async(req,res) => {
         );
         
         var arrInfo = [];
-        var arrStopout = [];
-        arrInfo[0] = accountIds[0].reward;
-        arrInfo[1] = accountIds[0].hedge;
-        arrStopout[0] = accountIds[0].reward_stopout_level;
-        arrStopout[1] = accountIds[0].hedge_stopout_level;
+        arrInfo[0] = accountIds[0].username;
+        arrInfo[1] = accountIds[0].account_no;
         
-        res.json({arrInfo: arrInfo, arrStopout: arrStopout}) ;
+        res.json({arrInfo: arrInfo}) ;
     } catch (error) {
         console.log('function getMetaAccountsByUserid error---'+ error);
     }
@@ -297,7 +269,6 @@ exports.getAllAccountIds = async() => {
 }
 
 const getUserList = async(type=0) => {
-    // let offset = (Number(req.query.page) - 1) * Number(req.query.limit);
     if (type==1) {
         const users = await Users.findAndCountAll(
             {
@@ -307,32 +278,19 @@ const getUserList = async(type=0) => {
                     'email',
                     'password',
                     'account_no',
-                    'api_token',
-                    'reward',
-                    'reward_stopout',
-                    'hedge',
-                    'hedge_stopout',
                     'wallet',
                     'usertype',
                     'investment',
                     'begin_date',
                     'fee',
-                    'usdt_account_number',
                     'Net_client_share_in_percent',
-                    'Total_assets_today',
                     'profit_now',
-                    'Share_of_main_account_in_percent',
                     'Admin_id',
                     'user_roles',
-                    'flash_main_assets',
-                    'flash_client_profit',
-                    'temp_assets'
-
                 ],
                 order: [
                     [db.cast(db.col('account_no'), 'INTEGER'), 'ASC'],
                 ],
-                // offset: offset, limit: Number(req.query.limit)
             }
         );
         
@@ -343,37 +301,24 @@ const getUserList = async(type=0) => {
             attributes:[
                 'id',
                 'username',
-                'account_no',
-                'reward_stopout',
-                'hedge_stopout',
-                'wallet',
-                'usertype',
-                'investment',
-                'begin_date',
-                'fee',
-                'usdt_account_number',
-                'Net_client_share_in_percent',
-                'Total_assets_today',
-                'profit_now',
-                'Share_of_main_account_in_percent',
-                'Admin_id',
-                'user_roles',
-                'flash_main_assets',
-                'flash_client_profit',
-                'temp_assets'
-
+                    'account_no',
+                    'wallet',
+                    'usertype',
+                    'investment',
+                    'begin_date',
+                    'fee',
+                    'Net_client_share_in_percent',
+                    'profit_now',
+                    'Admin_id',
+                    'user_roles',
             ],         
             order: [
                 [db.cast(db.col('account_no'), 'INTEGER'), 'ASC'],
-                // To sort in descending order, use ['account_no', 'DESC']
             ],
-            // offset: offset, limit: Number(req.query.limit)
         }
     );
     return users
 }
-  
-  
 exports.generatePdfsForUsertype4Users = async (req, res) => {
   try {
     const usertype4Users = await Users.findAll({
@@ -433,34 +378,6 @@ async function getUsersByAdminId(adminId) {
     }
 }
   
-
-async function updateAssociatedUsersWithAdminValues(adminId) {
-  try {
-    // Get the admin user and associated users
-    const { adminUser, associatedUsers } = await getUsersByAdminId(adminId);
-
-    // Create an object with the fields to be updated
-    const updateFields = {
-      api_token: adminUser.api_token,
-      reward: adminUser.reward,
-      reward_stopout: adminUser.reward_stopout,
-      hedge: adminUser.hedge,
-      hedge_stopout: adminUser.hedge_stopout,
-    };
-
-    // Update each associated user with the values from the admin user
-    for (const user of associatedUsers) {
-      await Users.update(updateFields, {
-        where: {
-          id: user.id,
-        },
-      });
-    }
-  } catch (error) {
-    // Handle any errors, e.g., by logging or throwing an exception
-    throw error;
-  }
-}
 exports.adminCommissionCalculation = async (req,res) => {
         const { user_id } = req.params;
     try {
