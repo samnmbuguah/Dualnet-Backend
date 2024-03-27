@@ -1,21 +1,27 @@
-const WebSocket = require('ws');
+const io = require('socket.io-client');
 
-const ws = new WebSocket('ws://localhost:3042'); 
+// Connect to the server
+const socket = io.connect('http://localhost:3042');
 
-ws.on('open', function open() {
-    console.log('connected');
-    ws.send(Date.now());
+socket.on('connect', () => {
+    console.log('Connected to the server');
+
+    // // Emit the 'updateScans' event every 30 seconds
+    // setInterval(() => {
+    //     console.log('Sending updateScans event to the server');
+    //     socket.emit('updateScans');
+    // }, 30000); // 30000 milliseconds = 30 seconds
 });
 
-ws.on('close', function close() {
-    console.log('disconnected');
+// Listen for the 'topScans' event to receive the top scans from the server
+socket.on('topScans', (data) => {
+    console.log('Received topScans from the server:', data);
 });
 
-ws.on('message', function incoming(data) {
-    try {
-        const topScans = JSON.parse(data);
-        console.log(topScans);
-    } catch (error) {
-        console.error('Error parsing data:', error);
-    }
+socket.on('disconnect', (reason) => {
+    console.log('Disconnected from the server. Reason:', reason);
+});
+
+socket.on('error', (error) => {
+    console.error('Received error from the server:', error);
 });
