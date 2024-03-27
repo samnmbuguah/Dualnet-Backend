@@ -1,25 +1,39 @@
-const MatchingPairs = require('../models/MatchingPairsModel.js');
-const PollPrices = require('./GateioPolling.js');
 const socketIO = require('socket.io');
+const PollPrices = require('./GateioPolling.js');
+const Scans = require('../models/ScansModel.js'); 
+const MatchingPairs = require('../models/MatchingPairsModel.js');
 
 const maxRetries = 5;
 const retryDelay = 5000; 
 
-async function fetchAndLogPrices(pollPrices) {
-    const values = await pollPrices.getSpotAndFuturesPrice();
-    pollPrices.updateScans(values);
+async function fetchTopScans() {
+    return await Scans.findAll({
+        order: [['percentageDifference', 'DESC']], // sorts by percentageDifference from highest to lowest
+        limit: 5 // gets the first 5 records
+    });
+}
+
+async function fetchAndLogPrices(pollPrices, io) {
+    await pollPrices.fetchAndUpdateScans();
+
+    // Fetch top scans from the database
+    const topScans = await fetchTopScans();
+
+    // Emit top scans to the client
+    io.emit('topScans', topScans);
 }
 
 async function StreamPrices(server, retryCount = 0) {
     try {
         const records = await MatchingPairs.findAll({
-            attributes: ['id', 'amountPrecision'],
-            limit: 50
+            attributes: ['id', 'amountPrecision', 'fundingRate'],
+            order: [['fundingRate', 'DESC']],
+            limit: 5
         });
 
         let tickers, amountPrecisions;
         if (!records || records.length === 0) {
-            console.error('No matching pairs found in the database. Using default tickers...');
+            console.error('No matching pairs found . Using default tickers...');
             tickers = ['BTC_USDT', "ETH_USDT"];
             amountPrecisions = [2, 2]; // default values
         } else {
@@ -28,10 +42,38 @@ async function StreamPrices(server, retryCount = 0) {
         }
 
         const io = socketIO(server); //socketIO initialization
+        // console.log(" Io instance" ,io)
+
+        io.on('error', (error) => {
+            console.error('Server error:', error);
+        });
+
         // Pass parameters to PollPrices constructor
-        const pollPrices = new PollPrices(tickers, "usdt", io, amountPrecisions, server); 
-        fetchAndLogPrices(pollPrices);
-        setInterval(() => fetchAndLogPrices(pollPrices), 60000);
+        const pollPrices = new PollPrices(tickers, "usdt", amountPrecisions); 
+        fetchAndLogPrices(pollPrices, io);
+        setInterval(() => fetchAndLogPrices(pollPrices, io), 60000);
+
+        // Listen for the 'updateScans' event from the client and handle it
+        io.on('connection', (socket) => {
+            const address = server.address();
+            console.log(`Websocket server connected to ${address.address}:${address.port}`);
+            socket.on('updateScans', async () => {
+                // Fetch top scans from the database
+                const topScans = await fetchTopScans();
+
+                // Emit top scans to the client
+                socket.emit('topScans', topScans);
+                fetchAndLogPrices(pollPrices, io);
+            });
+
+            socket.on('error', (error) => {
+                console.error('Socket error:', error);
+            });
+
+            socket.on('disconnect', (reason) => {
+                console.log(`Client disconnected: ${reason}`);
+            });
+        });
     } catch (error) {
         console.error('An error occurred:', error);
         if (retryCount < maxRetries) {
