@@ -16,20 +16,11 @@ const Users = db.define('users',{
     account_no:{
         type: DataTypes.STRING
     },
-    api_token:{
-        type: DataTypes.STRING
+    api_key: {
+        type: DataTypes.STRING(5000)
     },
-    reward:{
+    api_secret: {
         type: DataTypes.STRING
-    },
-    reward_stopout:{
-        type: DataTypes.STRING
-    }, 
-    hedge:{
-        type: DataTypes.INTEGER
-    },
-    hedge_stopout:{
-        type: DataTypes.INTEGER
     },
     wallet:{
         type: DataTypes.INTEGER
@@ -49,37 +40,15 @@ const Users = db.define('users',{
     Admin_id:{
         type: DataTypes.STRING
     },
-    refresh_token:{
-        type: DataTypes.STRING
-    },
     fee:{
         type: DataTypes.DECIMAL(10, 2),
     },
-    usdt_account_number:{
-        type: DataTypes.STRING
-    },
-    Total_assets_today: {
-        type: DataTypes.DECIMAL(10, 2), 
-      },
     profit_now: {
         type: DataTypes.DECIMAL(10, 2), 
     },
-    Share_of_main_account_in_percent: {
-        type: DataTypes.DECIMAL(5, 2), // Example: 5 digits in total with 2 decimal places
-    },
     user_roles: {
         type:DataTypes.STRING
-    },
-    flash_main_assets: {
-        type: DataTypes.INTEGER,
-    },
-    flash_client_profit: {
-        type: DataTypes.INTEGER,
-    },
-    temp_assets: {
-        type: DataTypes.INTEGER
-
-    },
+    }
 },{
     freezeTableName:true
 });
