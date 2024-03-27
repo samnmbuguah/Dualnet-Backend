@@ -1,4 +1,3 @@
-
 require('dotenv').config();
 const GateApi = require('gate-api');
 const apiKey = process.env.API_KEY;
@@ -7,55 +6,26 @@ const client = new GateApi.ApiClient();
 client.setApiKeySecret(apiKey, apiSecret);
 const spotApi = new GateApi.SpotApi(client);
 const futuresApi = new GateApi.FuturesApi(client);
-const onScansUpdated = require('./ScansServer.js');
 const Scans = require('../models/ScansModel.js');
-const { Op } = require("sequelize");
 
 class PollPrices {
-    constructor(tickers, settle, io, amountPrecisions,server) {
+    constructor(tickers, settle, amountPrecisions) {
         this.amountPrecisions = amountPrecisions;
         this.tickers = tickers;
         this.settle = settle;
-        this.server = server;
         this.lastPrices = {};
-        this.io = io;
-        this.init();
     }
 
-    async init() {
-        const values = await this.getSpotAndFuturesPrice();
-        this.updateScans(values);
-    }
+    async fetchAndUpdateScans() {
+        const promises = this.tickers.map(async (ticker, index) => {
+            const spotResponse = await spotApi.listCandlesticks(ticker, { interval: '1m', limit: 1 });
+            const futuresResponse = await futuresApi.listFuturesCandlesticks(this.settle, ticker, { interval: '1m', limit: 1 });
 
-    async getSpotAndFuturesPrice() {
-        try {
-            const promises = this.tickers.map(ticker => {
-                const spotPromise = spotApi.listCandlesticks(ticker, { interval: '1m', limit: 1 })
-                    .then(value => {
-                        const closeValue = value.body[0][4];
-                        return closeValue;
-                    }, error => console.error(error));
+            const spotPrice = spotResponse.body[0][4];
+            console.log(`Spot price for ${ticker}: ${spotPrice}`);
+            const futuresPrice = futuresResponse.body[0].c;
+            console.log(`Futures price for ${ticker}: ${futuresPrice}`);
 
-                const futuresPromise = futuresApi.listFuturesCandlesticks(this.settle, ticker, { interval: '1m', limit: 1 })
-                    .then(value => {
-                        const closeValue = value.body[0].c;
-                        return closeValue;
-                    }, error => console.error(error));
-
-                return Promise.all([futuresPromise, spotPromise]);
-            });
-
-            return Promise.all(promises);
-        } catch (error) {
-            console.error(error);
-        }
-    } 
-
-    async updateScans(values) {
-        const upsertPromises = values.map((value, index) => {
-            const ticker = this.tickers[index];
-            const futuresPrice = value[0];
-            const spotPrice = value[1];
             let valueDifference = futuresPrice - spotPrice;
             valueDifference = parseFloat(valueDifference.toFixed(this.amountPrecisions[index]));
             let percentageDifference = ((futuresPrice - spotPrice) / spotPrice) * 100;
@@ -70,29 +40,15 @@ class PollPrices {
             });
         });
 
-        Promise.all(upsertPromises).then(async () => {
-            const topScans = await Scans.findAll({
-                where: {
-                    percentageDifference: {
-                        [Op.gt]: 0 // filters out records with negative percentageDifference
-                    }
-                },
-                order: [['percentageDifference', 'DESC']], // sorts by percentageDifference from highest to lowest
-                limit: 5 // gets the first 5 records
-            });
-            console.log('Top scans updated in the database');
-            this.io.emit('All Prices Updated', topScans);
-            onScansUpdated(this.server, topScans); // Pass server to onScansUpdated
+        const results = await Promise.allSettled(promises);
+
+        results.forEach((result, index) => {
+            if (result.status === 'rejected') {
+                console.error(`Failed to update scan for ticker ${this.tickers[index]}: ${result.reason}`);
+            }
         });
 
-        values.forEach((value, index) => {
-            const ticker = this.tickers[index];
-            const futuresPrice = value[0];
-            const spotPrice = value[1];
-            let percentageDifference = ((futuresPrice - spotPrice) / spotPrice) * 100;
-            percentageDifference = parseFloat(percentageDifference.toFixed(4));
-            // console.log('Percentage difference between futures and spot for', ticker, ':', percentageDifference);
-        });
+        console.log('Top scans updated in the database');
     }
 }
 
