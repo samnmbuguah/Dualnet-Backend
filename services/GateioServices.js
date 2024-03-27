@@ -38,7 +38,7 @@ function findMatchingPairs() {
             .filter(spotPair => futuresContractsMap.has(spotPair.id))
             .map(spotPair => ({
                 id: spotPair.id,
-                fundingRate: futuresContractsMap.get(spotPair.id).fundingRate,
+                fundingRate: (parseFloat(futuresContractsMap.get(spotPair.id).fundingRate) * 100).toFixed(4),
                 name: futuresContractsMap.get(spotPair.id).name,
                 precision: spotPair.precision,
                 amountPrecision: spotPair.amountPrecision,
