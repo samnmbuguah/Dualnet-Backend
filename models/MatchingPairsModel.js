@@ -8,7 +8,7 @@ const MatchingPairs = db.define('MatchingPairs', {
         primaryKey: true
     },
     fundingRate: {
-        type: Sequelize.STRING
+        type: Sequelize.FLOAT
     },
     name: {
         type: Sequelize.STRING,
