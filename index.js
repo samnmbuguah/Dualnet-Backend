@@ -13,9 +13,15 @@ if (!process.env.PORT) {
 }
 
 // CORS configuration
-const corsOptions = {
+console.log("IN",process.env.ENVIRONMENT, "ENVIRONMENT");
+let corsOptions = {
   origin: ['https://dualnet-production.up.railway.app', 'http://localhost:3042', 'http://localhost:3000', 'http://dualnet.railway.internal'],
 };
+
+if (process.env.ENVIRONMENT === 'development') {
+  corsOptions = { origin: '*' }; // Allow all origins in development
+}
+
 app.use(cors(corsOptions));
 
 const populateTables = require('./jobs/PopulateTables.js');
@@ -26,13 +32,15 @@ const PORT = process.env.PORT || 3042;
 app.use(express.json());
 app.use('/api', router);
 
-// Serve static files from the React frontend app
-app.use(express.static(path.join(__dirname, '../FrontendDualnet/build')))
+if (process.env.ENVIRONMENT !== 'development') {
+  // Serve static files from the React frontend app
+  app.use(express.static(path.join(__dirname, '../FrontendDualnet/build')))
 
-// All other GET requests not handled before will return our React app
-app.get('*', (req, res) => {
-  res.sendFile(path.join(__dirname, '../FrontendDualnet/build', 'index.html'));
-});
+  // All other GET requests not handled before will return our React app
+  app.get('*', (req, res) => {
+    res.sendFile(path.join(__dirname, '../FrontendDualnet/build', 'index.html'));
+  });
+}
 
 // Global error handler
 app.use((err, req, res, next) => {
