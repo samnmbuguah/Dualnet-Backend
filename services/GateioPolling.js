@@ -22,9 +22,9 @@ class PollPrices {
             const futuresResponse = await futuresApi.listFuturesCandlesticks(this.settle, ticker, { interval: '1m', limit: 1 });
 
             const spotPrice = spotResponse.body[0][4];
-            console.log(`Spot price for ${ticker}: ${spotPrice}`);
+            // console.log(`Spot price for ${ticker}: ${spotPrice}`);
             const futuresPrice = futuresResponse.body[0].c;
-            console.log(`Futures price for ${ticker}: ${futuresPrice}`);
+            // console.log(`Futures price for ${ticker}: ${futuresPrice}`);
 
             let valueDifference = futuresPrice - spotPrice;
             valueDifference = parseFloat(valueDifference.toFixed(this.amountPrecisions[index]));
@@ -41,15 +41,18 @@ class PollPrices {
         });
 
         const results = await Promise.allSettled(promises);
+        let hasError = false;
 
         results.forEach((result, index) => {
             if (result.status === 'rejected') {
                 console.error(`Failed to update scan for ticker ${this.tickers[index]}: ${result.reason}`);
+                hasError = true;
             }
         });
 
         console.log('Top scans updated in the database');
+
+        return hasError ? 'Error occurred while updating scans' : 'Scans updated successfully';
     }
 }
-
 module.exports = PollPrices;
