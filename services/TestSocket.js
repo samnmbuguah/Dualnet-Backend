@@ -6,11 +6,11 @@ const socket = io.connect('http://localhost:3042');
 socket.on('connect', () => {
     console.log('Connected to the server');
 
-    // // Emit the 'updateScans' event every 30 seconds
-    // setInterval(() => {
-    //     console.log('Sending updateScans event to the server');
-    //     socket.emit('updateScans');
-    // }, 30000); // 30000 milliseconds = 30 seconds
+    // Emit the 'updateScans' event every 30 seconds
+    setInterval(() => {
+        console.log('Sending updateScans event to the server');
+        socket.emit('updateScans');
+    }, 30000); // 30000 milliseconds = 30 seconds
 });
 
 // Listen for the 'topScans' event to receive the top scans from the server
