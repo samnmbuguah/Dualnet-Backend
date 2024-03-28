@@ -2,25 +2,41 @@ const socketIO = require('socket.io');
 const PollPrices = require('./GateioPolling.js');
 const Scans = require('../models/ScansModel.js'); 
 const MatchingPairs = require('../models/MatchingPairsModel.js');
+const { Op } = require('sequelize');
 
 const maxRetries = 5;
 const retryDelay = 5000; 
 
 async function fetchTopScans() {
     return await Scans.findAll({
-        order: [['percentageDifference', 'DESC']], // sorts by percentageDifference from highest to lowest
+        where: {
+            percentageDifference: {
+                [Op.and]: [
+                    { [Op.ne]: null }, // not equal to null
+                    { [Op.gt]: 0 } // greater than 0
+                ]
+            }
+        },
+        order: [['percentageDifference', 'DESC']], // sorts by percentageDifference
         limit: 5 // gets the first 5 records
     });
 }
 
 async function fetchAndLogPrices(pollPrices, io) {
-    await pollPrices.fetchAndUpdateScans();
+    // Debug: Log the result of fetchAndUpdateScans
+    const updateResult = await pollPrices.fetchAndUpdateScans();
+    console.log('fetchAndUpdateScans result:', updateResult);
 
-    // Fetch top scans from the database
-    const topScans = await fetchTopScans();
+    // If fetchAndUpdateScans was successful, fetch top scans from the database
+    if (updateResult === 'Scans updated successfully') {
+        const topScans = await fetchTopScans();
 
-    // Emit top scans to the client
-    io.emit('topScans', topScans);
+        // Debug: Log the top scans
+        // console.log('Top scans:', topScans);
+
+        // Emit top scans to the client
+        io.emit('topScans', topScans);
+    }
 }
 
 async function StreamPrices(server, retryCount = 0) {
@@ -28,7 +44,7 @@ async function StreamPrices(server, retryCount = 0) {
         const records = await MatchingPairs.findAll({
             attributes: ['id', 'amountPrecision', 'fundingRate'],
             order: [['fundingRate', 'DESC']],
-            limit: 5
+            limit: 10
         });
 
         let tickers, amountPrecisions;
@@ -41,8 +57,13 @@ async function StreamPrices(server, retryCount = 0) {
             amountPrecisions = records.map(record => record.amountPrecision);
         }
 
-        const io = socketIO(server); //socketIO initialization
-        // console.log(" Io instance" ,io)
+        const io = socketIO(server, {
+            cors: {
+                origin: process.env.ENVIRONMENT === 'development' ? '*' : ['https://dualnet-production.up.railway.app', 'http://localhost:3042', 'http://localhost:3000', 'http://dualnet.railway.internal'],
+                methods: ["GET", "POST"],
+                credentials: true
+            }
+        });
 
         io.on('error', (error) => {
             console.error('Server error:', error);
