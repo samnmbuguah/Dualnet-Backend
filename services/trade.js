@@ -47,7 +47,8 @@ function createFuturesShortOrder(settle, contract, size) {
         });
 }
 
-async function trade(pair, amount, lastPrice, quantoMultiplier, takerFeeRate, fundingRate, maintenanceRate, firstAskPrice) {
+async function trade(pair, amount, lastPrice, quantoMultiplier, takerFeeRate) {
+    const firstAskPrice =  await getFirstAsk(pair);
     try {
         const contracts = Math.floor(amount / (lastPrice * quantoMultiplier));
         let spotAmount = contracts * quantoMultiplier * firstAskPrice; // Get the first ask price
@@ -62,30 +63,29 @@ async function trade(pair, amount, lastPrice, quantoMultiplier, takerFeeRate, fu
     }
 }
 
-async function executeTrade() {
-    try {
-        const contractData = await getContractDetails('usdt', 'MOVEZ_USDT');
-        const firstAskPrice =  await getFirstAsk('MOVEZ_USDT');
-        console.log('Executing trade...');
-        await trade(
-            'MOVEZ_USDT',
-            '5',
-            contractData.lastPrice,
-            contractData.quantoMultiplier,
-            0.001,
-            contractData.fundingRate,
-            contractData.maintenanceRate,
-            firstAskPrice
-        );
-    } catch (error) {
-        console.error(error);
-    }
-}
+module.exports = trade;
 
-executeTrade();
+// async function executeTrade() {
+//     try {
+//         const contractData = await getContractDetails('usdt', 'MOVEZ_USDT');
+//         const firstAskPrice =  await getFirstAsk('MOVEZ_USDT');
+//         console.log('Executing trade...');
+//         await trade(
+//             'MOVEZ_USDT',
+//             '5',
+//             contractData.lastPrice,
+//             contractData.quantoMultiplier,
+//             0.001,
+//         );
+//     } catch (error) {
+//         console.error(error);
+//     }
+// }
 
-function checkPriceConvergence() {
-    // Replace this with actual logic to check price convergence
-    // This is just a placeholder
-    return Math.random() < 0.01;
-}
+// executeTrade();
+
+// function checkPriceConvergence() {
+//     // Replace this with actual logic to check price convergence
+//     // This is just a placeholder
+//     return Math.random() < 0.01;
+// }
