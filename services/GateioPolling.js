@@ -18,41 +18,35 @@ class PollPrices {
 
     async fetchAndUpdateScans() {
         const promises = this.tickers.map(async (ticker, index) => {
-            const spotResponse = await spotApi.listCandlesticks(ticker, { interval: '1m', limit: 1 });
-            const futuresResponse = await futuresApi.listFuturesCandlesticks(this.settle, ticker, { interval: '1m', limit: 1 });
+            try {
+                const spotResponse = await spotApi.listCandlesticks(ticker, { interval: '1m', limit: 1 });
+                const futuresResponse = await futuresApi.listFuturesCandlesticks(this.settle, ticker, { interval: '1m', limit: 1 });
 
-            const spotPrice = spotResponse.body[0][4];
-            // console.log(`Spot price for ${ticker}: ${spotPrice}`);
-            const futuresPrice = futuresResponse.body[0].c;
-            // console.log(`Futures price for ${ticker}: ${futuresPrice}`);
+                const spotPrice = spotResponse.body[0][4];
+                const futuresPrice = futuresResponse.body[0].c;
 
-            let valueDifference = futuresPrice - spotPrice;
-            valueDifference = parseFloat(valueDifference.toFixed(this.amountPrecisions[index]));
-            let percentageDifference = ((futuresPrice - spotPrice) / spotPrice) * 100;
-            percentageDifference = parseFloat(percentageDifference.toFixed(4));
+                let valueDifference = futuresPrice - spotPrice;
+                valueDifference = parseFloat(valueDifference.toFixed(this.amountPrecisions[index]));
+                let percentageDifference = ((futuresPrice - spotPrice) / spotPrice) * 100;
+                percentageDifference = parseFloat(percentageDifference.toFixed(4));
 
-            return Scans.upsert({
-                matchingPairId: ticker,
-                futuresPrice: futuresPrice,
-                spotPrice: spotPrice,
-                valueDifference: valueDifference,
-                percentageDifference: percentageDifference
-            });
-        });
+                await Scans.upsert({
+                    matchingPairId: ticker,
+                    futuresPrice: futuresPrice,
+                    spotPrice: spotPrice,
+                    valueDifference: valueDifference,
+                    percentageDifference: percentageDifference
+                });
 
-        const results = await Promise.allSettled(promises);
-        let hasError = false;
-
-        results.forEach((result, index) => {
-            if (result.status === 'rejected') {
-                console.error(`Failed to update scan for ticker ${this.tickers[index]}: ${result.reason}`);
-                hasError = true;
+                console.log(`Scan for ticker ${ticker} updated successfully`);
+            } catch (error) {
+                console.error(`Failed to update scan for ticker ${ticker}: ${error}`);
             }
         });
 
-        console.log('Top scans updated in the database');
+        await Promise.allSettled(promises);
 
-        return hasError ? 'Error occurred while updating scans' : 'Scans updated successfully';
+        console.log('Top scans updated in the database');
     }
 }
 module.exports = PollPrices;
