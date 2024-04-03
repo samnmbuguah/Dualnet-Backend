@@ -12,8 +12,8 @@ async function fetchTopScans() {
         where: {
             percentageDifference: {
                 [Op.and]: [
-                    { [Op.ne]: null }, // not equal to null
-                    { [Op.gt]: 0 } // greater than 0
+                    { [Op.gt]: 0 }, // greater than 0
+                    { [Op.ne]: null } // not equal to null
                 ]
             }
         },
