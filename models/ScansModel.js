@@ -20,6 +20,36 @@ const Scans = db.define('Scans', {
     },
     fundingRate: {
         type: Sequelize.FLOAT
+    },
+    quantoMultiplier: {
+        type: Sequelize.STRING
+    },
+    leverageMin: {
+        type: Sequelize.STRING
+    },
+    leverageMax: {
+        type: Sequelize.STRING
+    },
+    maintenanceRate: {
+        type: Sequelize.STRING
+    },
+    makerFeeRate: {
+        type: Sequelize.STRING
+    },
+    takerFeeRate: {
+        type: Sequelize.STRING
+    },
+    fundingNextApply: {
+        type: Sequelize.INTEGER
+    },
+    base: {
+        type: Sequelize.STRING
+    },
+    minBaseAmount: {
+        type: Sequelize.STRING
+    },
+    minQuoteAmount: {
+        type: Sequelize.STRING
     }
 });
 
