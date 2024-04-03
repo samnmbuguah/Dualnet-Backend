@@ -1,7 +1,7 @@
 const GateApi = require('gate-api');
 const client = require('./gateClient');
 const getContractDetails = require('./getContract');
-
+const getFirstAsk = require('./getFirstAsk');
 const spotApi = new GateApi.SpotApi(client);
 const futuresApi = new GateApi.FuturesApi(client);
 
@@ -11,11 +11,12 @@ let futuresOrderId;
 function createSpotBuyOrder(pair, amount) {
     console.log('Creating spot buy order...');
     const order = new GateApi.Order();
+    order.account = 'spot'; 
     order.currencyPair = pair;
     order.amount = amount;
     order.side = 'buy';
     order.type = 'market'; // Set type to 'market'
-    order.timeInForce = 'ioc'; // Set timeInForce to 'ioc'
+    order.timeInForce = 'fok'; // FillOrKill, fill either completely or none 
 
     return spotApi.createOrder(order)
         .then(response => {
@@ -46,63 +47,45 @@ function createFuturesShortOrder(settle, contract, size) {
         });
 }
 
-async function trade(pair, amount) {
+async function trade(pair, amount, lastPrice, quantoMultiplier, takerFeeRate, fundingRate, maintenanceRate, firstAskPrice) {
     try {
-        const contract = await getContractDetails('usdt', pair);
-        console.log('Contract:', contract, contract.quantoMultiplier);
-        const lastPrice = parseFloat(contract.lastPrice);
-        const quantoMultiplier = parseFloat(contract.quantoMultiplier);
-        const makerFeeRate = parseFloat(contract.makerFeeRate);
-        const takerFeeRate = parseFloat(contract.takerFeeRate);
-        const fundingRate = parseFloat(contract.fundingRate);
-        const maintenanceRate = parseFloat(contract.maintenanceRate);
-
-        // Calculate the total fee rate
-        const totalFeeRate = makerFeeRate + takerFeeRate + fundingRate + maintenanceRate;
-
-        // Adjust the size to account for the fees
-        const size = Math.round((amount / (lastPrice * quantoMultiplier)) * (1 + totalFeeRate));
-        console.log('Size:', size);
-        console.log('totalFeeRate:', totalFeeRate);
+        const contracts = Math.floor(amount / (lastPrice * quantoMultiplier));
+        let spotAmount = contracts * quantoMultiplier * firstAskPrice; // Get the first ask price
+        spotAmount = spotAmount + (spotAmount * takerFeeRate); // Add 0.1% taker fee
+        console.log('Spot amount:', spotAmount);
+        console.log('Contracts:', contracts);
         // return;
-        await createFuturesShortOrder('usdt', pair, size);
-        await createSpotBuyOrder(pair, amount);
+        await createFuturesShortOrder('usdt', pair, contracts);
+        await createSpotBuyOrder(pair, spotAmount);
     } catch (error) {
         console.error('Error in trade:', error.response ? error.response.data : error);
     }
 }
 
-
-function closeOrders() {
-    return Promise.all([
-        spotApi.cancelOrder(spotOrderId),
-        futuresApi.cancelOrder(futuresOrderId)
-    ])
-    .then(() => console.log('Orders closed'))
-    .catch(error => console.error(error));
+async function executeTrade() {
+    try {
+        const contractData = await getContractDetails('usdt', 'MOVEZ_USDT');
+        const firstAskPrice =  await getFirstAsk('MOVEZ_USDT');
+        console.log('Executing trade...');
+        await trade(
+            'MOVEZ_USDT',
+            '5',
+            contractData.lastPrice,
+            contractData.quantoMultiplier,
+            0.001,
+            contractData.fundingRate,
+            contractData.maintenanceRate,
+            firstAskPrice
+        );
+    } catch (error) {
+        console.error(error);
+    }
 }
+
+executeTrade();
 
 function checkPriceConvergence() {
     // Replace this with actual logic to check price convergence
     // This is just a placeholder
     return Math.random() < 0.01;
 }
-
-
-trade('MOVEZ_USDT', '5').catch(console.error);
-
-
-
-// async function trade(pair, size) {
-//     // await createSpotBuyOrder(pair, size);
-//     await createFuturesShortOrder(pair, size); // Leverage is set to '1'
-
-//     while (true) {
-//         if (checkPriceConvergence()) {
-//             await closeOrders();
-//             break;
-//         }
-
-//         await new Promise(resolve => setTimeout(resolve, 1000));
-//     }
-// }
