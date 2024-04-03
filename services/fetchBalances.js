@@ -37,6 +37,6 @@ module.exports = {
 
 
 
-// Call the functions
-fetchSpotBalances();
-fetchFuturesBalances();
+// // Call the functions
+// fetchSpotBalances();
+// fetchFuturesBalances();
