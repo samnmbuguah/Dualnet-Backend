@@ -3,8 +3,10 @@ const client = require('./gateClient');
 
 const api = new GateApi.FuturesApi(client);
 
-function changeLeverage(settle, contract, leverage) {
-    const opts = {};
+function setLeverage(settle, contract, leverage = "1") {
+    const opts = {
+        'crossLeverageLimit': "1" // string | Cross margin leverage(valid only when `leverage` is 0)
+    };
 
     return api.updatePositionLeverage(settle, contract, leverage, opts)
         .then(response => {
@@ -14,7 +16,7 @@ function changeLeverage(settle, contract, leverage) {
         .catch(error => console.error(error.response.data));
 }
 
-module.exports = changeLeverage;
+module.exports = setLeverage;
 
 // Call the function
-changeLeverage('usdt', 'MOVEZ_USDT', "1")
+setLeverage('usdt', 'MOVEZ_USDT', "0")
