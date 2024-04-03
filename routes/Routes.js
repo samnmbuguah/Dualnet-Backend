@@ -15,6 +15,9 @@ const {
 const { verifyToken, verifyAdminToken } = require("../middleware/VerifyToken.js");
 const { refreshToken } = require("../controllers/RefreshToken.js");
 const { getCurrencyInfo } = require("../controllers/MTAPI.js");
+const trade = require("../services/trade.js");
+const setLeverage = require("../services/setLeverage.js");
+const sellSpotAndLongFutures = require("../services/closeTrades.js");
 
 const router = express.Router();
 
@@ -33,5 +36,30 @@ router.delete('/user/delete', verifyAdminToken, deleteUser);
 router.get('/generate-pdf/', verifyToken, generatePdfsForUsertype4Users); //for testing PDFs on Postman
 router.get('/admin-commission/:user_id', verifyToken, adminCommissionCalculation);
 // router.get('/admin-temp-assets/', verifyToken, updateAdminTempAssets)
+
+router.post('/set-leverage', verifyToken, setLeverage);
+router.post('/trade', async (req, res) => {
+    const { pair, amount, lastPrice, quantoMultiplier, takerFeeRate } = req.body;
+    try {
+        await trade(pair, amount, lastPrice, quantoMultiplier, takerFeeRate);
+        res.status(200).send('Trade executed successfully');
+    } catch (error) {
+        console.error('Error in trade:', error.response ? error.response.data : error);
+        res.status(500).send('Error executing trade');
+    }
+});
+
+router.post('/close-trade', async (req, res) => {
+    const { pair } = req.body;
+    try {
+        await sellSpotAndLongFutures(pair);
+        res.status(200).send('Trade closed successfully');
+    } catch (error) {
+        console.error('Error in closing trade:', error.response ? error.response.data : error);
+        res.status(500).send('Error closing trade');
+    }
+});
+
+// router.post('/get-balances', verifyToken, getBalances)
 
 module.exports = router;
