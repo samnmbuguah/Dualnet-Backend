@@ -8,7 +8,7 @@ function getContractDetails(settle, contract) {
         .then(response => {
             const contractDetails = response.body.find(item => item.name === contract);
             if (contractDetails) {
-                console.log('Contract data fetched:', contractDetails.name);
+                // console.log('Contract data fetched:', contractDetails);
                 return contractDetails; // Return the contract details
             } else {
                 console.log(`Contract ${contract} not found.`);
@@ -23,5 +23,5 @@ function getContractDetails(settle, contract) {
 
 module.exports = getContractDetails;
 
-// // Usage:
-// getContractDetails('usdt', 'BTC_USDT');
+// Usage:
+getContractDetails('usdt', 'MOVEZ_USDT');
