@@ -14,17 +14,6 @@ async function sellSpotAndLongFutures(pair) {
         return;
     }
 
-    // Fetch the futures position for the pair
-    const futuresPosition = await fetchPosition('usdt', pair);
-    if (!futuresPosition) {
-        console.error(`No futures position found for ${pair}`);
-        return;
-    }
-    // Fetch the current market price for the pair
-    const ticker = await spotApi.listTickers({ currencyPair: pair });
-    const marketPrice = ticker.body[0].last;
-    console.log("Spot market price: ", marketPrice);
-    
     // Create a spot order to sell the entire spot balance
     const order = new GateApi.Order();
     order.account = "spot"
@@ -34,20 +23,26 @@ async function sellSpotAndLongFutures(pair) {
     order.side = "sell"; // Sell the spot balance
     order.timeInForce = 'ioc'
 
-
-    spotApi.createOrder(order)
-    .then(response => console.log('Spot order created', response.body))
-    .catch(error => console.error(error.response));
+    if (spotBalance.available >= 3) {
+        try {
+            const response = await spotApi.createOrder(order);
+            console.log('Spot order created', response.body);
+        } catch (error) {
+            console.error(error);
+        }
+    }
     
-    // // Create a futures order to close the entire futures position
-    // const futuresOrder = new GateApi.FuturesOrder();
-    // futuresOrder.contract = pair;
-    // futuresOrder.size = futuresPosition.size; // Close the entire position
-    // futuresOrder.close = true;
+    // Create a futures order to close the entire futures position
+    const futuresOrder = new GateApi.FuturesOrder();
+    futuresOrder.contract = pair;
+    futuresOrder.size = 0;// Close the entire position
+    futuresOrder.price = '0'; // Market order
+    futuresOrder.close = true;
+    futuresOrder.tif = 'ioc'; // Time in force
 
-    // futuresApi.createFuturesOrder(baseCurrency, futuresOrder)
-    // .then(response => console.log('Futures order created', response.body))
-    // .catch(error => console.error(error.response));
+    futuresApi.createFuturesOrder('usdt', futuresOrder)
+    .then(response => console.log('Futures order created', response.body))
+    .catch(error => console.error(error.response));
 }
 
 module.exports = sellSpotAndLongFutures;
