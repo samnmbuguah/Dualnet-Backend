@@ -25,7 +25,17 @@ async function populateTables() {
             // If the Scans table is empty, create a new Scan for each MatchingPair
             const newScans = matchingPairs.map(pair => ({
                 matchingPairId: pair.id,
-                fundingRate: pair.fundingRate
+                fundingRate: pair.fundingRate,
+                quantoMultiplier: pair.quantoMultiplier,
+                leverageMin: pair.leverageMin,
+                leverageMax: pair.leverageMax,
+                maintenanceRate: pair.maintenanceRate,
+                makerFeeRate: pair.makerFeeRate,
+                takerFeeRate: pair.takerFeeRate,
+                fundingNextApply: pair.fundingNextApply,
+                base: pair.base,
+                minBaseAmount: pair.minBaseAmount,
+                minQuoteAmount: pair.minQuoteAmount
             }));
             await Scans.bulkCreate(newScans);
             console.log("Created new scans for all", matchingPairs.length,"matching pairs");
@@ -33,10 +43,20 @@ async function populateTables() {
             const newScans = matchingPairs.map(pair => ({
                 matchingPairId: pair.id,
                 fundingRate: pair.fundingRate,
+                quantoMultiplier: pair.quantoMultiplier,
+                leverageMin: pair.leverageMin,
+                leverageMax: pair.leverageMax,
+                maintenanceRate: pair.maintenanceRate,
+                makerFeeRate: pair.makerFeeRate,
+                takerFeeRate: pair.takerFeeRate,
+                fundingNextApply: pair.fundingNextApply,
+                base: pair.base,
+                minBaseAmount: pair.minBaseAmount,
+                minQuoteAmount: pair.minQuoteAmount
             }));
 
             await Scans.bulkCreate(newScans, {
-                updateOnDuplicate: ["fundingRate"]
+                updateOnDuplicate: ["fundingRate", "quantoMultiplier", "maintenanceRate", "makerFeeRate", "takerFeeRate", "fundingNextApply",]
             });
             console.log("Updated funding rate for all", matchingPairs.length,"scans");
         }
