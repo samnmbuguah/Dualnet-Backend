@@ -31,14 +31,27 @@ function findMatchingPairs() {
 
         return spotPairs
             .filter(spotPair => futuresContractsMap.has(spotPair.id))
-            .map(spotPair => ({
-                id: spotPair.id,
-                fundingRate: (parseFloat(futuresContractsMap.get(spotPair.id).fundingRate) * 100).toFixed(4),
-                name: futuresContractsMap.get(spotPair.id).name,
-                precision: spotPair.precision,
-                amountPrecision: spotPair.amountPrecision,
-                fee: spotPair.fee,
-            }));
+            .map(spotPair => {
+                const contract = futuresContractsMap.get(spotPair.id);
+                return {
+                    id: spotPair.id,
+                    fundingRate: (parseFloat(contract.fundingRate) * 100).toFixed(4),
+                    name: contract.name,
+                    precision: spotPair.precision,
+                    amountPrecision: spotPair.amountPrecision,
+                    fee: spotPair.fee,
+                    quantoMultiplier: contract.quantoMultiplier,
+                    leverageMin: contract.leverageMin,
+                    leverageMax: contract.leverageMax,
+                    maintenanceRate: contract.maintenanceRate,
+                    makerFeeRate: contract.makerFeeRate,
+                    takerFeeRate: contract.takerFeeRate,
+                    fundingNextApply: contract.fundingNextApply,
+                    base: spotPair.base,
+                    minBaseAmount: spotPair.minBaseAmount,
+                    minQuoteAmount: spotPair.minQuoteAmount
+                };
+            });
     })
     .catch(error => console.error(error));
 }
