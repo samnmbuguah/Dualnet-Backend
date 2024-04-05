@@ -38,28 +38,40 @@ router.get('/admin-commission/:user_id', verifyToken, adminCommissionCalculation
 // router.get('/admin-temp-assets/', verifyToken, updateAdminTempAssets)
 
 router.post('/set-leverage', verifyToken, setLeverage);
-router.post('/trade', async (req, res) => {
+router.post('/trade',verifyToken, async (req, res) => {
     const { pair, amount, lastPrice, quantoMultiplier, takerFeeRate } = req.body;
-    try {
+    
+     try {
         await trade(pair, amount, lastPrice, quantoMultiplier, takerFeeRate);
-        res.status(200).send('Trade executed successfully');
+        res.status(200).json('Trade executed successfully');
     } catch (error) {
         console.error('Error in trade:', error.response ? error.response.data : error);
-        res.status(500).send('Error executing trade');
+        res.status(500).json('Error executing trade');
     }
 });
 
-router.post('/close-trade', async (req, res) => {
+router.post('/close-trade',verifyToken, async (req, res) => {
     const { pair } = req.body;
     try {
         await sellSpotAndLongFutures(pair);
-        res.status(200).send('Trade closed successfully');
+        res.status(200).json({message:'Trade closed successfully', status:200});
     } catch (error) {
         console.error('Error in closing trade:', error.response ? error.response.data : error);
-        res.status(500).send('Error closing trade');
+        res.status(500).json({message:'Error closing trade',status:500});
     }
 });
 
 // router.post('/get-balances', verifyToken, getBalances)
+router.post('/get-balances', verifyToken, async (req, res) => {
+    const { secretKey } = req.body;
+    console.log(secretKey); 
+    try {
+        res.status(200).json({message:'Recieved balances',balances:{secretKey}, status:200});
+    } catch (error) {
+        console.error('Error in recieving balances:', error.response ? error.response.data : error);
+        res.status(500).json({message:'Error recieving balances',status:500});
+    }
+});
+
 
 module.exports = router;
