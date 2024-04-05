@@ -7,10 +7,10 @@ function setLeverage(req, res) {
     const { settle= 'usdt', contract, leverage = "1" } = req.body;
 
     const opts = {
-        'crossLeverageLimit': "1" // string | Cross margin leverage(valid only when `leverage` is 0)
+        'crossLeverageLimit': leverage // string | Cross margin leverage(valid only when `leverage` is 0)
     };
 
-    api.updatePositionLeverage(settle, contract, leverage, opts)
+    api.updatePositionLeverage(settle, contract, 0, opts)
         .then(response => {
             console.log('Leverage changed successfully', response.body);
             res.json(response.body);
