@@ -18,7 +18,7 @@ async function fetchTopScans() {
             }
         },
         order: [['percentageDifference', 'DESC']], // sorts by percentageDifference
-        limit: 5 // gets the first 5 records
+        limit: 10
     });
 }
 
@@ -44,7 +44,7 @@ async function StreamPrices(server, retryCount = 0) {
         const records = await MatchingPairs.findAll({
             attributes: ['id', 'amountPrecision', 'fundingRate'],
             order: [['fundingRate', 'DESC']],
-            limit: 10
+            limit: 30
         });
 
         let tickers, amountPrecisions;
