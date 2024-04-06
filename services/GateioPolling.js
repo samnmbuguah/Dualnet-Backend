@@ -38,7 +38,7 @@ class PollPrices {
                     percentageDifference: percentageDifference
                 });
 
-                console.log(`Scan for ticker ${ticker} updated successfully`);
+                // console.log(`Scan for ticker ${ticker} updated successfully`);
             } catch (error) {
                 console.error(`Failed to update scan for ticker ${ticker}: ${error}`);
             }
@@ -46,7 +46,7 @@ class PollPrices {
 
         await Promise.allSettled(promises);
 
-        console.log('Top scans updated in the database');
+        return 'Top scans updated in the database';
     }
 }
 module.exports = PollPrices;
