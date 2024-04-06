@@ -11,6 +11,7 @@ function fetchSpotBalance(pair) {
             const baseCurrency = pair.split('_')[0]; // Extract base currency from pair
             const baseCurrencyBalance = response.body.find(account => account.currency === baseCurrency);
             console.log(`Spot ${baseCurrency} balance: `, baseCurrencyBalance.available);
+            console.log('Spot account balance fetched successfully', baseCurrencyBalance, baseCurrency );
             return baseCurrencyBalance;
         })
         .catch(error => console.error(error));
@@ -18,5 +19,5 @@ function fetchSpotBalance(pair) {
 
 module.exports = fetchSpotBalance;
 
-// // Call the function
-// fetchSpotBalance('MOVEZ_USDT');
+// Call the function
+fetchSpotBalance('MOVEZ_USDT');
