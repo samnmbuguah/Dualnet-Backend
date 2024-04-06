@@ -1,5 +1,6 @@
 const GateApi = require('gate-api');
-const client = require('./gateClient');
+const client = new GateApi.ApiClient();
+const getApiCredentials = require('./getApiCredentials');
 
 // Fetch spot account balances
 function fetchSpotBalances() {
@@ -11,7 +12,8 @@ function fetchSpotBalances() {
             console.log('Fetched spot account balances');
             const usdtBalance = response.body.find(account => account.currency === 'USDT');
             console.log('Spot USDT balance: ', usdtBalance.available);
-            return response.body;
+            // console.log('response.body', response.body)
+            return usdtBalance.available;
         })
         .catch(error => console.error(error));
 }
@@ -25,18 +27,34 @@ function fetchFuturesBalances() {
         .then(response => {
             console.log('Fetched futures account balances');
             console.log('Futures account balances: ', response.body.available);
-            return response.body;
+            // console.log('response.body', response.body)
+            return response.body.available;
         })
         .catch(error => console.error(error));
 }
 
-module.exports = {
-    fetchSpotBalances,
-    fetchFuturesBalances,
-};
 
+// Fetch both spot and futures account balances
+async function fetchBothBalances(subClientId) {
+    try {
+        const credentials = await getApiCredentials(subClientId);
+        if (credentials) {
+            client.setApiKeySecret(credentials.apiKey, credentials.apiSecret);
+
+            const spotBalances = await fetchSpotBalances();
+            const futuresBalances = await fetchFuturesBalances();
+            console.log('Balances', [spotBalances, futuresBalances]);
+            return [spotBalances, futuresBalances];
+        } else {
+            console.error('API credentials not found');
+        }
+    } catch (error) {
+        console.error(error);
+    }
+}
+
+module.exports = fetchBothBalances;
 
 
 // // Call the functions
-// fetchSpotBalances();
-// fetchFuturesBalances();
+// fetchBothBalances(3)
