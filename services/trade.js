@@ -42,7 +42,7 @@ function createFuturesShortOrder(settle, contract, size) {
             console.log('Futures short order created', response.body);
         })
         .catch(error => {
-            console.error(error.response.data);
+            console.error(error.response);
             throw error; // Throw the error to stop execution
         });
     }
@@ -76,3 +76,16 @@ async function trade(pair, amount, lastPrice, quantoMultiplier, takerFeeRate, su
 }
 
 module.exports = trade;
+
+
+
+// const tradeData = {
+//   pair: 'MPC_USDT',
+//   amount: '10',
+//   lastPrice: 0.4151,
+//   quantoMultiplier: '1',
+//   takerFeeRate: '0.00075',
+//   subClientId: 3
+// };
+
+// trade(tradeData.pair, tradeData.amount, tradeData.lastPrice, tradeData.quantoMultiplier, tradeData.takerFeeRate, tradeData.subClientId);
