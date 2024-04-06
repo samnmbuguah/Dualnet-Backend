@@ -18,6 +18,7 @@ const { getCurrencyInfo } = require("../controllers/MTAPI.js");
 const trade = require("../services/trade.js");
 const setLeverage = require("../services/setLeverage.js");
 const sellSpotAndLongFutures = require("../services/closeTrades.js");
+const fetchBothBalances = require("../services/fetchBalances.js");
 
 const router = express.Router();
 
@@ -39,10 +40,10 @@ router.get('/admin-commission/:user_id', verifyToken, adminCommissionCalculation
 
 router.post('/set-leverage', verifyToken, setLeverage);
 router.post('/trade',verifyToken, async (req, res) => {
-    const { pair, amount, lastPrice, quantoMultiplier, takerFeeRate } = req.body;
+    const { pair, amount, lastPrice, quantoMultiplier, takerFeeRate, subClientId } = req.body;
     
      try {
-        await trade(pair, amount, lastPrice, quantoMultiplier, takerFeeRate);
+        await trade(pair, amount, lastPrice, quantoMultiplier, takerFeeRate,subClientId);
         res.status(200).json('Trade executed successfully');
     } catch (error) {
         console.error('Error in trade:', error.response ? error.response.data : error);
@@ -61,17 +62,21 @@ router.post('/close-trade',verifyToken, async (req, res) => {
     }
 });
 
-// router.post('/get-balances', verifyToken, getBalances)
-router.post('/get-balances', verifyToken, async (req, res) => {
-    const { secretKey } = req.body;
-    console.log(secretKey); 
+router.post('/get-balances', async (req, res) => {
+    const { subClientId } = req.body;
+    console.log('subClientId:', subClientId);
     try {
-        res.status(200).json({message:'Recieved balances',balances:{secretKey}, status:200});
+        const balances = await fetchBothBalances(subClientId);
+        // console.log('balances:', balances);
+        if (balances) {
+            res.status(200).json(balances);
+        } else {
+            throw new Error('Balances is undefined');
+        }
     } catch (error) {
-        console.error('Error in recieving balances:', error.response ? error.response.data : error);
-        res.status(500).json({message:'Error recieving balances',status:500});
+        console.error('Error fetching balances:', error);
+        res.status(500).json({ message: 'Error fetching balances', status: 500 });
     }
 });
-
 
 module.exports = router;
