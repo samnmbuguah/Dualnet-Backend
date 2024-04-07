@@ -63,12 +63,13 @@ async function trade(pair, amount, lastPrice, quantoMultiplier, takerFeeRate, su
     }
 
     try {
-        const contracts = Math.floor(amount / (lastPrice * quantoMultiplier));
-        let spotAmount = contracts * quantoMultiplier * firstAskPrice; 
+        let size = Math.floor(amount / (lastPrice * quantoMultiplier));
+        let spotAmount = size * quantoMultiplier * firstAskPrice; 
         spotAmount = spotAmount + (spotAmount * takerFeeRate); 
         console.log('Spot amount:', spotAmount);
-        console.log('Contracts:', contracts);
-        await createFuturesShortOrder('usdt', pair, contracts);
+        console.log('Size:', size);
+        size = size * -1;
+        await createFuturesShortOrder('usdt', pair, size);
         await createSpotBuyOrder(pair, spotAmount);
     } catch (error) {
         console.error('Error in trade:', error.response ? error.response.data : error);
