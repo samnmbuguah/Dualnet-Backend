@@ -19,5 +19,5 @@ function fetchSpotBalance(pair) {
 
 module.exports = fetchSpotBalance;
 
-// Call the function
-fetchSpotBalance('MOVEZ_USDT');
+// // Call the function
+// fetchSpotBalance('MOVEZ_USDT');
