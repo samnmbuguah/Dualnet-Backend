@@ -23,20 +23,18 @@ async function sellSpotAndLongFutures(pair) {
     order.side = "sell"; // Sell the spot balance
     order.timeInForce = 'ioc'
 
-    if (spotBalance.available >= 3) {
-        try {
-            const response = await spotApi.createOrder(order);
-            console.log('Spot order created', response.body);
-        } catch (error) {
-            console.error(error);
-        }
+    try {
+        const response = await spotApi.createOrder(order);
+        console.log('Spot order created', response.body);
+    } catch (error) {
+        console.error(error);
     }
-    
+
     // Create a futures order to close the entire futures position
     const futuresOrder = new GateApi.FuturesOrder();
     futuresOrder.contract = pair;
     futuresOrder.size = 0;// Close the entire position
-    futuresOrder.price = '0'; // Market order
+    futuresOrder.price = '0'; // Market order  
     futuresOrder.close = true;
     futuresOrder.tif = 'ioc'; // Time in force
 
