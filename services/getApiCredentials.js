@@ -2,7 +2,7 @@ const Users = require('../models/UserModel.js');
 
 async function getApiCredentials(subClientId) {
     try {
-        const user = await Users.findOne({ where: { id: subClientId } });
+        const user = await Users.findOne({ where: { userId: subClientId } });
         if (user) {
             console.log(`Fetched API credentials for user with id ${subClientId}`);
             return { apiKey: user.api_key, apiSecret: user.api_secret };
