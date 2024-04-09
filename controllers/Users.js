@@ -162,11 +162,6 @@ exports.UpdateUser = async(req,res)  =>{
                     id: data.id
                 }
             });
-            if(isAdminUser) {
-                await updateAssociatedUsersWithAdminValues(data.id);
-                //update admin temp_assets
-                updateAdminTempAssets(); 
-            }
         }
 
         let users = await getUserList(1);
