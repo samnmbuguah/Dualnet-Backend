@@ -43,8 +43,11 @@ async function StreamPrices(server, retryCount = 0) {
     try {
         const records = await MatchingPairs.findAll({
             attributes: ['id', 'amountPrecision', 'fundingRate'],
-            order: [['fundingRate', 'DESC']],
-            limit: 30
+            where: {
+                fundingRate: {
+                    [Op.gt]: 0.25
+                }
+            }
         });
 
         let tickers, amountPrecisions;
@@ -72,7 +75,7 @@ async function StreamPrices(server, retryCount = 0) {
         // Pass parameters to PollPrices constructor
         const pollPrices = new PollPrices(tickers, "usdt", amountPrecisions); 
         fetchAndLogPrices(pollPrices, io);
-        setInterval(() => fetchAndLogPrices(pollPrices, io), 60000);
+        setInterval(() => fetchAndLogPrices(pollPrices, io), 300000);
 
         // Listen for the 'updateScans' event from the client and handle it
         io.on('connection', (socket) => {
