@@ -7,6 +7,8 @@ client.setApiKeySecret(apiKey, apiSecret);
 const spotApi = new GateApi.SpotApi(client);
 const futuresApi = new GateApi.FuturesApi(client);
 const Scans = require('../models/ScansModel.js');
+const listFuturesOrderBook = require('./listFuturesOrderBook.js');
+const listOrderBook = require('./listSpotOrderBook.js');
 
 class PollPrices {
     constructor(tickers, settle, amountPrecisions) {
@@ -16,37 +18,37 @@ class PollPrices {
         this.lastPrices = {};
     }
 
-    async fetchAndUpdateScans() {
-        const promises = this.tickers.map(async (ticker, index) => {
-            try {
-                const spotResponse = await spotApi.listCandlesticks(ticker, { interval: '1m', limit: 1 });
-                const futuresResponse = await futuresApi.listFuturesCandlesticks(this.settle, ticker, { interval: '1m', limit: 1 });
+   async fetchAndUpdateScans() {
+    const promises = this.tickers.map(async (ticker, index) => {
+        try {
+            const spotResponse = await listOrderBook(ticker, { limit: 1 });
+            const futuresResponse = await listFuturesOrderBook(this.settle, ticker, { limit: 1 });
 
-                const spotPrice = spotResponse.body[0][4];
-                const futuresPrice = futuresResponse.body[0].c;
+            const spotPrice = parseFloat(spotResponse.p);
+            const futuresPrice = parseFloat(futuresResponse.p);
 
-                let valueDifference = futuresPrice - spotPrice;
-                valueDifference = parseFloat(valueDifference.toFixed(this.amountPrecisions[index]));
-                let percentageDifference = ((futuresPrice - spotPrice) / spotPrice) * 100;
-                percentageDifference = parseFloat(percentageDifference.toFixed(4));
+            let valueDifference = futuresPrice - spotPrice;
+            valueDifference = parseFloat(valueDifference.toFixed(this.amountPrecisions[index]));
+            let percentageDifference = ((futuresPrice - spotPrice) / spotPrice) * 100;
+            percentageDifference = parseFloat(percentageDifference.toFixed(4));
 
-                await Scans.upsert({
-                    matchingPairId: ticker,
-                    futuresPrice: futuresPrice,
-                    spotPrice: spotPrice,
-                    valueDifference: valueDifference,
-                    percentageDifference: percentageDifference
-                });
+            await Scans.upsert({
+                matchingPairId: ticker,
+                futuresPrice: futuresPrice,
+                spotPrice: spotPrice,
+                valueDifference: valueDifference,
+                percentageDifference: percentageDifference
+            });
 
-                // console.log(`Scan for ticker ${ticker} updated successfully`);
-            } catch (error) {
-                console.error(`Failed to update scan for ticker ${ticker}: ${error}`);
-            }
-        });
+            // console.log(`Scan for ticker ${ticker} updated successfully`);
+        } catch (error) {
+            console.error(`Failed to update scan for ticker ${ticker}: ${error}`);
+        }
+    });
 
-        await Promise.allSettled(promises);
+    await Promise.allSettled(promises);
 
-        return 'Top scans updated in the database';
-    }
+    return 'Top scans updated in the database';
+}
 }
 module.exports = PollPrices;
