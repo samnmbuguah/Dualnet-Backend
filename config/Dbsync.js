@@ -5,21 +5,25 @@ const UserPDFs = require('../models/UserPDFsModel.js');
 const Scans = require('../models/ScansModel.js');
 const Bots = require('../models/BotsModel.js');
 
-Scans.update({ percentageDifference: -1 }, { where: {} })
+Scans.sync()
+    .then(() => {
+        console.log('Scans table has been synced');
+        return Scans.update({ percentageDifference: -1 }, { where: {} });
+    })
     .then(() => {
         console.log('percentageDifference in Scans table has been updated to -1');
-        return Users.sync();
+        return Users.sync({alter: true});
     })
     .then(() => {
         console.log('Users table has been synced');
-        return MatchingPairs.sync({force: true});
+        return MatchingPairs.sync();
     })
     .then(() => {
         console.log('MatchingPairs table has been synced');
-        return UserPDFs.sync({force: true});
+        return UserPDFs.sync();
     })
     .then(() => {
-        console.log('Scans table has been synced');
+        console.log('UserPDFs table has been synced');
         return Bots.sync({force: true});
     })
     .then(() => console.log('Bots table has been synced'))
