@@ -24,7 +24,7 @@ class PollPrices {
             const spotResponse = await listOrderBook(ticker, { limit: 1 });
             const futuresResponse = await listFuturesOrderBook(this.settle, ticker, { limit: 1 });
 
-            const spotPrice = parseFloat(spotResponse.p);
+            const spotPrice = parseFloat(spotResponse[0]);
             const futuresPrice = parseFloat(futuresResponse.p);
 
             let valueDifference = futuresPrice - spotPrice;
@@ -39,7 +39,7 @@ class PollPrices {
                 valueDifference: valueDifference,
                 percentageDifference: percentageDifference
             });
-
+            console.log("Upserted ", ticker, " with futures price ", futuresPrice, " and spot price ", spotPrice, " and percentage difference ", percentageDifference);
             // console.log(`Scan for ticker ${ticker} updated successfully`);
         } catch (error) {
             console.error(`Failed to update scan for ticker ${ticker}: ${error}`);
