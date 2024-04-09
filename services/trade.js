@@ -2,6 +2,8 @@ const GateApi = require('gate-api');
 const client = new GateApi.ApiClient();
 const getFirstAsk = require('./getFirstAsk');
 const getApiCredentials = require('./getApiCredentials');
+const Bots = require('../models/BotsModel.js');
+const uuid = require('uuid');
 
 let spotOrderId;
 let futuresOrderId;
@@ -21,6 +23,7 @@ function createSpotBuyOrder(pair, amount) {
     .then(response => {
         spotOrderId = response.body.id;
         console.log('Spot buy order created', response.body);
+        return response.body;
     })
     .catch(error => console.error(error.response.data));
 }
@@ -40,14 +43,15 @@ function createFuturesShortOrder(settle, contract, size) {
         .then(response => {
             futuresOrderId = response.body.id;
             console.log('Futures short order created', response.body);
+            return response.body;
         })
         .catch(error => {
             console.error(error.response);
-            throw error; // Throw the error to stop execution
+            throw error; // Throw the error to stop execution 
         });
     }
     
-async function trade(pair, amount, lastPrice, quantoMultiplier, takerFeeRate, subClientId) {
+async function trade(pair, amount, lastPrice, quantoMultiplier, takerFeeRate, subClientId, leverage) {
     let firstAskPrice;
     try {
         const credentials = await getApiCredentials(subClientId);
@@ -69,8 +73,55 @@ async function trade(pair, amount, lastPrice, quantoMultiplier, takerFeeRate, su
         console.log('Spot amount:', spotAmount);
         console.log('Size:', size);
         size = size * -1;
-        await createFuturesShortOrder('usdt', pair, size);
-        await createSpotBuyOrder(pair, spotAmount);
+
+        
+        const futuresResponse = await createFuturesShortOrder('usdt', pair, size);
+        const spotResponse = await createSpotBuyOrder(pair, spotAmount);
+        console.log('Futures response:', futuresResponse);
+        console.log('Spot response:', spotResponse);
+        const tradeId = uuid.v4()
+
+
+        const futuresBot = {
+            userId: subClientId,
+            matchingPairId: pair,
+            size: futuresResponse.size,
+            unrealisedPnl: 0,
+            realisedPnl: 0,
+            status: futuresResponse.status,
+            entryPrice: futuresResponse.fillPrice,
+            timestamp: new Date(),
+            leverage: leverage,
+            tradeType: 'short',
+            orderId: futuresResponse.id,
+            currentPrice: futuresResponse.fillPrice,
+            pNL: 0,
+            cumulativePNL: 0,
+            isClose: false
+        };
+
+        await Bots.upsert(futuresBot, { fields: ['tradeId', 'userId'] });
+
+        const spotBot = {
+            userId: subClientId,
+            matchingPairId: pair,
+            size: spotResponse.amount,
+            unrealisedPnl: 0,
+            realisedPnl: 0,
+            status: spotResponse.status,
+            entryPrice: spotResponse.fillPrice,
+            timestamp: new Date(),
+            leverage: leverage,
+            tradeType: 'buy',
+            orderId: spotResponse.id,
+            currentPrice: spotResponse.avgDealPrice,
+            pNL: 0,
+            cumulativePNL: 0,
+            isClose: false
+        };
+
+    await Bots.upsert(spotBot, { fields: ['tradeId', 'userId'] });
+
     } catch (error) {
         console.error('Error in trade:', error.response ? error.response.data : error);
     }
@@ -80,13 +131,14 @@ module.exports = trade;
 
 
 
-// const tradeData = {
-//   pair: 'MPC_USDT',
-//   amount: '10',
-//   lastPrice: 0.4151,
-//   quantoMultiplier: '1',
-//   takerFeeRate: '0.00075',
-//   subClientId: 3
-// };
+const tradeData = {
+  pair: 'LAI_USDT',
+  amount: '5',
+  lastPrice: 0.04775,
+  quantoMultiplier: '10',
+  takerFeeRate: '0.00075',
+  subClientId: 19,
+  leverage: '1',
+};
 
-// trade(tradeData.pair, tradeData.amount, tradeData.lastPrice, tradeData.quantoMultiplier, tradeData.takerFeeRate, tradeData.subClientId);
+trade(tradeData.pair, tradeData.amount, tradeData.lastPrice, tradeData.quantoMultiplier, tradeData.takerFeeRate, tradeData.subClientId, tradeData.leverage);
