@@ -12,7 +12,7 @@ const MatchingPairs = db.define('MatchingPairs', {
     },
     name: {
         type: Sequelize.STRING,
-        primaryKey: true
+        unique: true
     },
     precision: {
         type: Sequelize.INTEGER
