@@ -5,6 +5,7 @@ const path = require("path");
 const cors = require('cors');
 const cron = require('node-cron');
 const server = require('http').createServer(app); // Create server with Express app
+const checkTrades = require('./services/checkTrades.js');
 
 // Check for required environment variables
 if (!process.env.PORT) {
@@ -54,3 +55,4 @@ server.listen(PORT, () => {
 });
 
 cron.schedule('0 * * * *', populateTables);
+cron.schedule('* * * * *', checkTrades);
