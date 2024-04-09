@@ -4,20 +4,16 @@ const MatchingPairs = require("./MatchingPairsModel.js");
 const Users = require("./UserModel.js");
 
 const Bots = db.define('Bots', {
-        id: {
-        type: Sequelize.STRING,
+    botId: {
+        type: Sequelize.INTEGER,
         primaryKey: true,
-        unique: true
+        autoIncrement: true
     },
     userId: {
-        type: Sequelize.INTEGER
+        type: Sequelize.INTEGER,
     },
     matchingPairId: {
         type: Sequelize.STRING,
-        references: {
-            model: MatchingPairs,
-            key: 'id'
-        }
     },
     size: {
         type: Sequelize.FLOAT
@@ -46,9 +42,6 @@ const Bots = db.define('Bots', {
     tradeType: {
         type: Sequelize.STRING
     },
-    tradeId: {
-        type: Sequelize.STRING
-    },
     orderId: {
         type: Sequelize.STRING
     },
@@ -60,16 +53,26 @@ const Bots = db.define('Bots', {
     },
     cumulativePNL: {
         type: Sequelize.FLOAT
-    }
+    }, 
+    isLiq: {
+        type: Sequelize.BOOLEAN
+    },
+    isClose: {
+        type: Sequelize.BOOLEAN
+    },
+    settle:{
+        type: Sequelize.STRING,
+        defaultValue: 'usdt'
+    },
 });
 
 // Define the relationship
-Bots.belongsTo(MatchingPairs, { foreignKey: 'matchingPairId' });
-MatchingPairs.hasMany(Bots, { foreignKey: 'id' });
+// Bots.belongsTo(MatchingPairs, { foreignKey: 'matchingPairId' });
+// MatchingPairs.hasMany(Bots, { foreignKey: 'tradeId' });
 
 
 // Define the relationship with Users
-Bots.belongsTo(Users, { foreignKey: 'userId' });
-Users.hasMany(Bots, { foreignKey: 'id' });
+// Bots.belongsTo(Users, { foreignKey: 'userId' });
+// Users.hasMany(Bots, { foreignKey: 'userId' });
 
 module.exports = Bots;
