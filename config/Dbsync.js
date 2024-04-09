@@ -3,6 +3,7 @@ const Users = require('../models/UserModel.js');
 const MatchingPairs = require('../models/MatchingPairsModel.js');
 const UserPDFs = require('../models/UserPDFsModel.js');
 const Scans = require('../models/ScansModel.js');
+const Bots = require('../models/BotsModel.js');
 
 Scans.update({ percentageDifference: -1 }, { where: {} })
     .then(() => {
