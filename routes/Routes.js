@@ -40,10 +40,10 @@ router.get('/admin-commission/:user_id', verifyToken, adminCommissionCalculation
 
 router.post('/set-leverage', verifyToken, setLeverage);
 router.post('/trade',verifyToken, async (req, res) => {
-    const { pair, amount, lastPrice, quantoMultiplier, takerFeeRate, subClientId } = req.body;
+    const { pair, amount, lastPrice, quantoMultiplier, takerFeeRate, subClientId, leverage } = req.body;
     
      try {
-        await trade(pair, amount, lastPrice, quantoMultiplier, takerFeeRate,subClientId);
+        await trade(pair, amount, lastPrice, quantoMultiplier, takerFeeRate,subClientId, leverage);
         res.status(200).json('Trade executed successfully');
     } catch (error) {
         console.error('Error in trade:', error.response ? error.response.data : error);
