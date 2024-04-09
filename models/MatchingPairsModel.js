@@ -1,11 +1,11 @@
 const { Sequelize } = require("sequelize");
 const db = require("../config/Database.js");
 
-// Define the MatchingPairs model
 const MatchingPairs = db.define('MatchingPairs', {
     id: {
         type: Sequelize.STRING,
-        primaryKey: true
+        primaryKey: true,
+        unique: true
     },
     fundingRate: {
         type: Sequelize.FLOAT
