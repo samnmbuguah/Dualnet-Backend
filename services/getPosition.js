@@ -14,6 +14,6 @@ function fetchPosition(settle, contract) {
 
 module.exports = fetchPosition;
 
-// Call the function
-fetchPosition('usdt', 'MOVEZ_USDT')
-    .then(() => console.log('Futures position fetched successfully'))
+// // Call the function
+// fetchPosition('usdt', 'LAI_USDT')
+//     .then(() => console.log('Futures position fetched successfully'))
