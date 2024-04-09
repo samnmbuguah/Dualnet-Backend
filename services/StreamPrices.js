@@ -10,11 +10,11 @@ const retryDelay = 5000;
 async function fetchTopScans() {
     return await Scans.findAll({
         where: {
+            fundingRate: {
+                [Op.gt]: 0.1 // greater than 0.1
+            },
             percentageDifference: {
-                [Op.and]: [
-                    { [Op.gt]: 0 }, // greater than 0
-                    { [Op.ne]: null } // not equal to null
-                ]
+                [Op.gt]: 0 // greater than 0
             }
         },
         order: [['percentageDifference', 'DESC']], // sorts by percentageDifference
@@ -45,11 +45,11 @@ async function StreamPrices(server, retryCount = 0) {
             attributes: ['id', 'amountPrecision', 'fundingRate'],
             where: {
                 fundingRate: {
-                    [Op.gt]: 0.25
+                    [Op.gt]: 0.1
                 }
-            }
+            },
+            limit: 30
         });
-
         let tickers, amountPrecisions;
         if (!records || records.length === 0) {
             console.error('No matching pairs found . Using default tickers...');
