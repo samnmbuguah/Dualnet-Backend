@@ -35,7 +35,8 @@ async function populateTables() {
                 fundingNextApply: pair.fundingNextApply,
                 base: pair.base,
                 minBaseAmount: pair.minBaseAmount,
-                minQuoteAmount: pair.minQuoteAmount
+                minQuoteAmount: pair.minQuoteAmount,
+                percentageDifference: -1
             }));
             await Scans.bulkCreate(newScans);
             console.log("Created new scans for all", matchingPairs.length,"matching pairs");
@@ -52,7 +53,8 @@ async function populateTables() {
                 fundingNextApply: pair.fundingNextApply,
                 base: pair.base,
                 minBaseAmount: pair.minBaseAmount,
-                minQuoteAmount: pair.minQuoteAmount
+                minQuoteAmount: pair.minQuoteAmount,
+                percentageDifference: -1
             }));
 
             await Scans.bulkCreate(newScans, {
