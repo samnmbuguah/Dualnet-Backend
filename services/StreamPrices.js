@@ -14,7 +14,7 @@ async function fetchTopScans() {
                 [Op.gt]: 0.1 // greater than 0.1
             },
             percentageDifference: {
-                [Op.gt]: 0 // greater than 0
+                [Op.gt]: 1 // greater than 0
             }
         },
         order: [['percentageDifference', 'DESC']], // sorts by percentageDifference
@@ -48,7 +48,7 @@ async function StreamPrices(server, retryCount = 0) {
                     [Op.gt]: 0.1
                 }
             },
-            limit: 30
+            limit: 10
         });
         let tickers, amountPrecisions;
         if (!records || records.length === 0) {
