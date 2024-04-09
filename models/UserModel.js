@@ -3,7 +3,12 @@ const db = require("../config/Database.js");
 
 const { DataTypes } = Sequelize;
 
-const Users = db.define('users',{
+const Users = db.define('users', {
+    userId: {
+        type: DataTypes.INTEGER,
+        primaryKey: true,
+        autoIncrement: true
+    },
     username:{
         type: DataTypes.STRING
     },
