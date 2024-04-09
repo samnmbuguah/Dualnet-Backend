@@ -4,6 +4,11 @@ const MatchingPairs = require("./MatchingPairsModel.js");
 const Users = require("./UserModel.js");
 
 const Bots = db.define('Bots', {
+        id: {
+        type: Sequelize.STRING,
+        primaryKey: true,
+        unique: true
+    },
     userId: {
         type: Sequelize.INTEGER
     },
