@@ -45,7 +45,9 @@ async function sellSpotAndLongFutures(pair) {
 
 module.exports = sellSpotAndLongFutures;
 
-// Call the function
-// sellSpotAndLongFutures('MOVEZ_USDT')
+// // Call the function
+// sellSpotAndLongFutures('LAI_USDT')
 //     .then(() => console.log('Spot and futures orders created'))
 //     .catch(error => console.error('Error during trading:', error));
+
+    
