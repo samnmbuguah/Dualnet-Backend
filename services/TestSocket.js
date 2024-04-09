@@ -10,7 +10,7 @@ socket.on('connect', () => {
     setInterval(() => {
         console.log('Sending updateScans event to the server');
         socket.emit('updateScans');
-    }, 30000); // 30000 milliseconds = 30 seconds
+    }, 10000); // 30000 milliseconds = 30 seconds
 });
 
 // Listen for the 'topScans' event to receive the top scans from the server
