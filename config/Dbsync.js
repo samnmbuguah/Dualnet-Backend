@@ -12,7 +12,7 @@ Scans.sync()
     })
     .then(() => {
         console.log('percentageDifference in Scans table has been updated to -1');
-        return Users.sync({alter: true});
+        return Users.sync({ alter: true});
     })
     .then(() => {
         console.log('Users table has been synced');
