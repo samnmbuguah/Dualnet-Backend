@@ -3,6 +3,8 @@ const PollPrices = require('./GateioPolling.js');
 const Scans = require('../models/ScansModel.js'); 
 const MatchingPairs = require('../models/MatchingPairsModel.js');
 const { Op } = require('sequelize');
+const moment = require('moment');
+
 
 const maxRetries = 5;
 const retryDelay = 5000; 
@@ -10,11 +12,11 @@ const retryDelay = 5000;
 async function fetchTopScans() {
     return await Scans.findAll({
         where: {
-            fundingRate: {
-                [Op.gt]: 0.1 // greater than 0.1
-            },
             percentageDifference: {
-                [Op.gt]: 1 // greater than 0
+                [Op.gt]: 0 // greater than 0
+            },
+            updatedAt: {
+                [Op.gte]: moment().subtract(5, 'minutes').toDate() // updated within the last 5 minutes
             }
         },
         order: [['percentageDifference', 'DESC']], // sorts by percentageDifference
@@ -45,10 +47,13 @@ async function StreamPrices(server, retryCount = 0) {
             attributes: ['id', 'amountPrecision', 'fundingRate'],
             where: {
                 fundingRate: {
-                    [Op.gt]: 0.1
+                    [Op.gt]: 0 // greater than 0.05
                 }
             },
-            limit: 10
+            order: [
+                ['fundingRate', 'DESC']
+            ],
+            limit: 30
         });
         let tickers, amountPrecisions;
         if (!records || records.length === 0) {
@@ -75,7 +80,7 @@ async function StreamPrices(server, retryCount = 0) {
         // Pass parameters to PollPrices constructor
         const pollPrices = new PollPrices(tickers, "usdt", amountPrecisions); 
         fetchAndLogPrices(pollPrices, io);
-        setInterval(() => fetchAndLogPrices(pollPrices, io), 300000);
+        setInterval(() => fetchAndLogPrices(pollPrices, io), 3000000);
 
         // Listen for the 'updateScans' event from the client and handle it
         io.on('connection', (socket) => {
