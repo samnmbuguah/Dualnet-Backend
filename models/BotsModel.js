@@ -66,13 +66,4 @@ const Bots = db.define('Bots', {
     },
 });
 
-// Define the relationship
-// Bots.belongsTo(MatchingPairs, { foreignKey: 'matchingPairId' });
-// MatchingPairs.hasMany(Bots, { foreignKey: 'tradeId' });
-
-
-// Define the relationship with Users
-// Bots.belongsTo(Users, { foreignKey: 'userId' });
-// Users.hasMany(Bots, { foreignKey: 'userId' });
-
 module.exports = Bots;
