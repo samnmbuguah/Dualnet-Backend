@@ -81,7 +81,7 @@ async function trade(pair, amount, lastPrice, quantoMultiplier, takerFeeRate, su
         console.log('Spot response:', spotResponse);
         const tradeId = uuid.v4()
 
-
+        
         const futuresBot = {
             userId: subClientId,
             matchingPairId: pair,
@@ -101,7 +101,7 @@ async function trade(pair, amount, lastPrice, quantoMultiplier, takerFeeRate, su
         };
 
         await Bots.upsert(futuresBot, { fields: ['tradeId', 'userId'] });
-
+        console.log('Futures bot created:', futuresBot);
         const spotBot = {
             userId: subClientId,
             matchingPairId: pair,
@@ -131,14 +131,14 @@ module.exports = trade;
 
 
 
-const tradeData = {
-  pair: 'LAI_USDT',
-  amount: '5',
-  lastPrice: 0.04775,
-  quantoMultiplier: '10',
-  takerFeeRate: '0.00075',
-  subClientId: 19,
-  leverage: '1',
-};
+// const tradeData = {
+//   pair: 'LAI_USDT',
+//   amount: '5',
+//   lastPrice: 0.04775,
+//   quantoMultiplier: '10',
+//   takerFeeRate: '0.00075',
+//   subClientId: 19,
+//   leverage: '1',
+// };
 
-trade(tradeData.pair, tradeData.amount, tradeData.lastPrice, tradeData.quantoMultiplier, tradeData.takerFeeRate, tradeData.subClientId, tradeData.leverage);
+// trade(tradeData.pair, tradeData.amount, tradeData.lastPrice, tradeData.quantoMultiplier, tradeData.takerFeeRate, tradeData.subClientId, tradeData.leverage);
