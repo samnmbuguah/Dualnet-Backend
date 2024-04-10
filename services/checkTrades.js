@@ -12,11 +12,13 @@ async function checkTrades() {
   try {
     console.log('checkTrades function called');
     // Fetch all bots where isClose is false
-    const bots = await Bots.findAll({ where: { isClose: false } });
-    console.log('Bots fetched successfully');
-    console.log(bots);
+    const bots = await Bots.findAll({ 
+      attributes: ["userId", "matchingPairId", "size", "unrealisedPnl", "realisedPnl", "status", "entryPrice", "exitPrice", "timestamp", "leverage", "tradeType", "orderId", "currentPrice", "pNL", "cumulativePNL", "isLiq", "isClose", "settle", "createdAt", "updatedAt"],
+      where: { isClose: false } 
+    });
+    console.log('Bots fetched successfully', bots.length);
+    // console.log(bots);
     for (const bot of bots) {
-      console.log('bot.matchingPairId:', bot.matchingPairId);
       // Fetch the spot balance for the pair
       const balance = await fetchSpotBalance(bot.matchingPairId);
       // Calculate balance in USDT
@@ -32,6 +34,8 @@ async function checkTrades() {
         try {
           await sellSpotAndLongFutures(bot.matchingPairId);
           console.log('Spot and futures exited successfully');
+          await Bots.update({ isClose: true }, { where: { matchingPairId: bot.matchingPairId, userId: bot.userId } });
+          console.log('Bots updated successfully');
         } catch (error) {
           console.error('Error during trading:', error);
         }
@@ -43,6 +47,8 @@ async function checkTrades() {
 }
 
 module.exports = checkTrades;
+
+
 // // Schedule the task to run every minute
 // cron.schedule('* * * * *', checkTrades);
 
