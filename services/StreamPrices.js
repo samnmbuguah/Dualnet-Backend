@@ -41,7 +41,7 @@ async function fetchAndLogPrices(pollPrices, io) {
     }
 }
 
-async function StreamPrices(server, retryCount = 0) {
+async function StreamPrices( io, retryCount = 0) {
     try {
         const records = await MatchingPairs.findAll({
             attributes: ['id', 'amountPrecision', 'fundingRate'],
@@ -65,14 +65,6 @@ async function StreamPrices(server, retryCount = 0) {
             amountPrecisions = records.map(record => record.amountPrecision);
         }
 
-        const io = socketIO(server, {
-            cors: {
-                origin: process.env.ENVIRONMENT === 'development' ? '*' : ['https://dualnet-production.up.railway.app', 'http://localhost:3042', 'http://localhost:3000', 'http://dualnet.railway.internal'],
-                methods: ["GET", "POST"],
-                credentials: true
-            }
-        });
-
         io.on('error', (error) => {
             console.error('Server error:', error);
         });
@@ -84,8 +76,6 @@ async function StreamPrices(server, retryCount = 0) {
 
         // Listen for the 'updateScans' event from the client and handle it
         io.on('connection', (socket) => {
-            const address = server.address();
-            console.log(`Websocket server connected to ${address.address}:${address.port}`);
             socket.on('updateScans', async () => {
                 // Fetch top scans from the database
                 const topScans = await fetchTopScans();
@@ -107,7 +97,7 @@ async function StreamPrices(server, retryCount = 0) {
         console.error('An error occurred:', error);
         if (retryCount < maxRetries) {
             console.log(`Retrying in ${retryDelay / 1000} seconds...`);
-            setTimeout(() => StreamPrices(server, retryCount + 1), retryDelay); 
+            setTimeout(() => StreamPrices(io, retryCount + 1), retryDelay); 
         } else {
             console.error('Max retries exceeded. Exiting...');
             process.exit(1);
