@@ -15,7 +15,10 @@ const Bots = db.define('Bots', {
     matchingPairId: {
         type: Sequelize.STRING,
     },
-    size: {
+    futuresSize: {
+        type: Sequelize.FLOAT
+    },
+    spotSize: {
         type: Sequelize.FLOAT
     },
     unrealisedPnl: {
@@ -64,6 +67,22 @@ const Bots = db.define('Bots', {
         type: Sequelize.STRING,
         defaultValue: 'usdt'
     },
+    taker: {
+        type: Sequelize.STRING
+    },
+    spotValue: {
+        type: Sequelize.FLOAT
+    },
+    futuresValue: {
+        type: Sequelize.FLOAT
+    },
+    amountIncurred: {
+        type: Sequelize.FLOAT
+    },
+    quantoMultiplier: { 
+        type: Sequelize.FLOAT
+    }
+
 });
 
 module.exports = Bots;
