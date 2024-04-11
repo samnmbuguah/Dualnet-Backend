@@ -13,14 +13,14 @@ async function checkTrades() {
     console.log('checkTrades function called');
     // Fetch all bots where isClose is false
     const bots = await Bots.findAll({ 
-      attributes: ["userId", "matchingPairId", "size", "unrealisedPnl", "realisedPnl", "status", "entryPrice", "exitPrice", "timestamp", "leverage", "tradeType", "orderId", "currentPrice", "pNL", "cumulativePNL", "isLiq", "isClose", "settle", "createdAt", "updatedAt"],
+      attributes: ["userId", "matchingPairId", "currentPrice", "settle", "isClose"],
       where: { isClose: false } 
     });
     console.log('Bots fetched successfully', bots.length);
     // console.log(bots);
     for (const bot of bots) {
       // Fetch the spot balance for the pair
-      const balance = await fetchSpotBalance(bot.matchingPairId);
+      const balance = await fetchSpotBalance(bot.matchingPairId, bot.userId);
       // Calculate balance in USDT
       const balanceInUsdt = balance.available * bot.currentPrice;
       // Fetch the futures position for the pair
@@ -32,7 +32,7 @@ async function checkTrades() {
         console.log('Exiting spot and futures');
         // Call sellSpotAndLongFutures with the matchingPairId from the bot
         try {
-          await sellSpotAndLongFutures(bot.matchingPairId);
+          await sellSpotAndLongFutures(bot.matchingPairId, bot.userId);
           console.log('Spot and futures exited successfully');
           await Bots.update({ isClose: true }, { where: { matchingPairId: bot.matchingPairId, userId: bot.userId } });
           console.log('Bots updated successfully');
@@ -53,7 +53,7 @@ module.exports = checkTrades;
 // cron.schedule('* * * * *', checkTrades);
 
 // // // Call the function
-//  fetchSpotBalance('LAI_USDT');
+//  fetchSpotBalance('LAI_USDT', 19);
 
 // // // Call the function
 // fetchPosition('usdt', 'LAI_USDT')
