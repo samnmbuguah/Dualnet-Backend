@@ -4,8 +4,11 @@ const app = express();
 const path = require("path");
 const cors = require('cors');
 const cron = require('node-cron');
+const socketIO = require('socket.io');
 const server = require('http').createServer(app); // Create server with Express app
 const checkTrades = require('./services/checkTrades.js');
+const closeByProfit = require('./services/closeByProfit.js');
+const Bots = require('./models/BotsModel.js');
 
 // Check for required environment variables
 if (!process.env.PORT) {
@@ -49,10 +52,33 @@ app.use((err, req, res, next) => {
   res.status(500).send('Something broke!');
 });
 
+// Create the WebSocket server
+const io = socketIO(server, {
+    cors: {
+        origin: process.env.ENVIRONMENT === 'development' ? '*' : ['https://dualnet-production.up.railway.app', 'http://localhost:3042', 'http://localhost:3000', 'http://dualnet.railway.internal'],
+        methods: ["GET", "POST"],
+        credentials: true
+    }
+});
+
 server.listen(PORT, () => {
   console.log(`Server running at port ${PORT}`);
-  StreamPrices(server); // Start streaming prices after the server has started
+  StreamPrices(io); // Start streaming prices after the server has started
+});
+
+// Schedule the cron job
+cron.schedule('* * * * *', async () => {
+    // Fetch all bots where isClose is false
+    const bots = await Bots.findAll({ where: { isClose: false } });
+    if (bots.length) {
+        try {
+            await closeByProfit(io, bots);
+            console.log('Closed trades by profit');
+        } catch (error) {
+            console.error('Error closing trades:', error);
+        }
+    }
 });
 
 cron.schedule('0 * * * *', populateTables);
-cron.schedule('* * * * *', checkTrades);
+setInterval(checkTrades, 1000);
