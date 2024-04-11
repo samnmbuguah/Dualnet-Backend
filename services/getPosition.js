@@ -9,7 +9,7 @@ function fetchPosition(settle, contract) {
             console.log('Futures position fetched. Size', response.body.size);
             return response.body;
         })
-        .catch(error => console.error(error.response.data));
+        .catch(error => console.error(error.response));
 }
 
 module.exports = fetchPosition;
