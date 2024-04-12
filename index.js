@@ -67,6 +67,20 @@ io.on('connection', (socket) => {
         // The client joins a room with a name equal to their userId
         socket.join(userId);
     });
+
+    // Listen for 'getBotData' event from the client
+    socket.on('getBotData', async (userId) => {
+        // Fetch all bots where isClose is false and userId matches the provided userId
+        const bots = await Bots.findAll({ where: { isClose: false, userId: userId } });
+        if (bots.length) {
+            try {
+                await closeByProfit(io, bots);
+                console.log('Completed the Close By profit loop');
+            } catch (error) {
+                console.error('Error closing trades:', error);
+            }
+        }
+    });
 });
 
 server.listen(PORT, () => {
