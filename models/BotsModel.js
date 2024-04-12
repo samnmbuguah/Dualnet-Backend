@@ -81,6 +81,9 @@ const Bots = db.define('Bots', {
     },
     quantoMultiplier: { 
         type: Sequelize.FLOAT
+    },
+    positionId: {
+        type: Sequelize.STRING
     }
 
 });
