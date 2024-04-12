@@ -31,12 +31,9 @@ async function sellSpotAndLongFutures(pair, subClientId) {
         order.side = "sell"; // Sell the spot balance
         order.timeInForce = 'ioc';
 
-        try {
-            const response = await spotApi.createOrder(order);
-            console.log('Spot close order response', response.body);
-        } catch (error) {
-            console.error(error);
-        }
+        // Try to create the spot order
+        const response = await spotApi.createOrder(order);
+        console.log('Spot close order response', response.body);
 
         // Create a futures order to close the entire futures position
         const futuresOrder = new GateApi.FuturesOrder();
@@ -49,7 +46,7 @@ async function sellSpotAndLongFutures(pair, subClientId) {
         futuresApi.createFuturesOrder('usdt', futuresOrder)
             .then(response => console.log('Futures close order response', response.body))
             .catch(error => console.error(error.response));
-    } catch (error) { // This is the missing closing brace
+    } catch (error) {
         console.error('Error during trading:', error);
     }
 }
