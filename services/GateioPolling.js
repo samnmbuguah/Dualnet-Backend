@@ -39,7 +39,7 @@ class PollPrices {
                 valueDifference: valueDifference,
                 percentageDifference: percentageDifference
             });
-            console.log("Upserted ", ticker, " with futures price ", futuresPrice, " and spot price ", spotPrice, " and percentage difference ", percentageDifference);
+            // console.log("Upserted ", ticker, " with futures price ", futuresPrice, " and spot price ", spotPrice, " and percentage difference ", percentageDifference);
             // console.log(`Scan for ticker ${ticker} updated successfully`);
         } catch (error) {
             console.error(`Failed to update scan for ticker ${ticker}: ${error}`);
