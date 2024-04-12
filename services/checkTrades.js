@@ -51,17 +51,3 @@ module.exports = checkTrades;
 
 // // Schedule the task to run every minute
 // cron.schedule('* * * * *', checkTrades);
-
-// // // Call the function
-//  fetchSpotBalance('LAI_USDT', 19);
-
-// // // Call the function
-// fetchPosition('usdt', 'LAI_USDT')
-//     .then(() => console.log('Futures position fetched successfully'))
-
-
-// // Call the function
-// sellSpotAndLongFutures('LAI_USDT')
-//     .then(() => console.log('Spot and futures exited succesfully'))
-//     .catch(error => console.error('Error during trading:', error));
-
