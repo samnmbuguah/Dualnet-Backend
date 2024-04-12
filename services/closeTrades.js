@@ -1,5 +1,6 @@
 const GateApi = require('gate-api');
 const client = new GateApi.ApiClient();
+const Bots = require('../models/BotsModel.js');
 const fetchSpotBalance = require('./fetchSpotBalance');
 const getApiCredentials = require('./getApiCredentials');
 
@@ -46,6 +47,14 @@ async function sellSpotAndLongFutures(pair, subClientId) {
         futuresApi.createFuturesOrder('usdt', futuresOrder)
             .then(response => console.log('Futures close order response', response.body))
             .catch(error => console.error(error.response));
+        
+       // Update the bots table
+        await Bots.update({ isClose: true }, {
+            where: {
+                userId: subClientId,
+                matchingPairId: pair
+            }
+        }); 
     } catch (error) {
         console.error('Error during trading:', error);
     }
