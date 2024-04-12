@@ -61,6 +61,14 @@ const io = socketIO(server, {
     }
 });
 
+io.on('connection', (socket) => {
+    // When a client connects, they should emit a 'join' event with their userId
+    socket.on('join', (userId) => {
+        // The client joins a room with a name equal to their userId
+        socket.join(userId);
+    });
+});
+
 server.listen(PORT, () => {
   console.log(`Server running at port ${PORT}`);
   StreamPrices(io); // Start streaming prices after the server has started
@@ -73,7 +81,7 @@ cron.schedule('* * * * *', async () => {
     if (bots.length) {
         try {
             await closeByProfit(io, bots);
-            console.log('Closed trades by profit');
+            console.log('Completed the Close By profit loop');
         } catch (error) {
             console.error('Error closing trades:', error);
         }
