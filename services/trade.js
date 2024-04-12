@@ -79,11 +79,11 @@ async function trade(pair, amount, lastPrice, quantoMultiplier, takerFeeRate, su
         const spotResponse = await createSpotBuyOrder(pair, spotAmount);
         console.log('Futures response:', futuresResponse);
         console.log('Spot response:', spotResponse);
-        const tradeId = uuid.v4()
         
         let futuresValue = futuresResponse.size * parseFloat(futuresResponse.fillPrice) * quantoMultiplier;
         let amountIncurred = spotAmount - futuresValue;
-        
+        let positionId = uuid.v4();
+
         const futuresBot = {
             userId: subClientId,
             matchingPairId: pair,
@@ -105,7 +105,8 @@ async function trade(pair, amount, lastPrice, quantoMultiplier, takerFeeRate, su
             spotValue: spotAmount,
             futuresValue: futuresValue,
             amountIncurred: amountIncurred,
-            quantoMultiplier: quantoMultiplier
+            quantoMultiplier: quantoMultiplier,
+            positionId: positionId,
         };
         await Bots.upsert(futuresBot, { fields: ['tradeId', 'userId'] });
         console.log('Futures bot created:', futuresBot);
@@ -129,7 +130,8 @@ async function trade(pair, amount, lastPrice, quantoMultiplier, takerFeeRate, su
             spotValue: spotAmount,
             futuresValue: futuresValue,
             amountIncurred: amountIncurred,
-            quantoMultiplier: quantoMultiplier
+            quantoMultiplier: quantoMultiplier,
+            positionId: positionId,
         };
         console.log('Spot bot created:', spotBot);
 
