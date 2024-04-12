@@ -24,7 +24,7 @@ async function checkTrades() {
       // Calculate balance in USDT
       const balanceInUsdt = balance.available * bot.currentPrice;
       // Fetch the futures position for the pair
-      const position = await fetchPosition(bot.settle, bot.matchingPairId);
+      const position = await fetchPosition(bot.settle, bot.matchingPairId, bot.userId);
       console.log('Balance in USDT:', balanceInUsdt);
       // If the size of the futures position is less than 0 and balanceInUsdt is less than 1
       // or if balanceInUsdt is greater than 1 and size is 0
