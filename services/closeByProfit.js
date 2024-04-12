@@ -26,6 +26,9 @@ async function closeByProfit(io, bots) {
         acc[key].bots.push(bot);
         return acc;
     }, {});
+
+    const botDataForUsers = {};
+
     console.log("completed Grouping of bots", groupedBots)
     // Iterate over each group of bots
     for (const key in groupedBots) {
@@ -55,7 +58,12 @@ async function closeByProfit(io, bots) {
             liqPrice: currentFuturesPosition.liqPrice
         }
         
-        io.to(group.userId).emit('botData', botData);
+        // If botDataForUsers for this user doesn't exist, create it
+        if (!botDataForUsers[group.userId]) {
+            botDataForUsers[group.userId] = [];
+        }
+        // Add botData to the array for this user
+        botDataForUsers[group.userId].push(botData);
         // If the percentage PNL is greater than the close by profit threshold, close the trade
         if (percentagePnl > closeByProfitThreshold) {
             sellSpotAndLongFutures(group.matchingPairId, group.userId);
@@ -64,6 +72,12 @@ async function closeByProfit(io, bots) {
                 await bot.update({ isClose: true });
             }
         }
+    }
+        // Emit botData for each user
+    for (const userId in botDataForUsers) {
+        const userIdInt = parseInt(userId, 10);
+        io.to(userIdInt).emit('botData', botDataForUsers[userId]);
+        console.log("botDataForUsers", botDataForUsers[userId])
     }
 }
 
