@@ -22,7 +22,6 @@ function fetchSpotPairs() {
     .catch(error => console.error(error));
 }
 
-// Function to find spot pairs whose id matches with a futures contract 'name' field
 function findMatchingPairs() {
     return Promise.all([fetchFuturesContracts(), fetchSpotPairs()])
     .then(([futuresContracts, spotPairs]) => {
@@ -33,9 +32,13 @@ function findMatchingPairs() {
             .filter(spotPair => futuresContractsMap.has(spotPair.id))
             .map(spotPair => {
                 const contract = futuresContractsMap.get(spotPair.id);
+                const fundingRate = parseFloat(contract.fundingRate)*100;
+                if (fundingRate > 1) {
+                    return null;
+                }
                 return {
                     id: spotPair.id,
-                    fundingRate: (parseFloat(contract.fundingRate) * 100).toFixed(4),
+                    fundingRate: fundingRate,
                     name: contract.name,
                     precision: spotPair.precision,
                     amountPrecision: spotPair.amountPrecision,
@@ -51,7 +54,8 @@ function findMatchingPairs() {
                     minBaseAmount: spotPair.minBaseAmount,
                     minQuoteAmount: spotPair.minQuoteAmount
                 };
-            });
+            })
+            .filter(pair => pair !== null);
     })
     .catch(error => console.error(error));
 }
@@ -66,14 +70,9 @@ function findMatchingPairs() {
 //     .then(futuresContracts => console.log(futuresContracts[0]))
 //     .catch(error => console.error(error));
 
-// // Call findMatchingPairs
+// Call findMatchingPairs
 // findMatchingPairs()
-// .then(matchingPairs => console.log('Matching pairs: ', matchingPairs.length, matchingPairs[0]))
-// .catch(error => console.error(error));
+//     .then(matchingPairs => console.log('Matching pairs: ', matchingPairs.length, matchingPairs[0]))
+//     .catch(error => console.error(error));
 
-// const api = new GateApi.AccountApi(client);
-// //Get account details
-// api.getAccountDetail()
-//    .then(value => console.log('API called successfully. Returned data: ', value.body),
-//        error => console.error(error));
 module.exports = findMatchingPairs;
