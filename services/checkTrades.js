@@ -30,9 +30,8 @@ async function checkTrades() {
       // or if balanceInUsdt is greater than 1 and size is 0
       if ((position.size < 0 && balanceInUsdt < 1) || (balanceInUsdt > 1 && position.size === 0)) {
         console.log('Exiting spot and futures');
-        // Call sellSpotAndLongFutures with the matchingPairId from the bot
         try {
-          await sellSpotAndLongFutures(bot.matchingPairId, bot.userId);
+          await sellSpotAndLongFutures(bot.matchingPairId, bot.userId, position.size, balance, bot.positionId);
           console.log('Spot and futures exited successfully');
           await Bots.update({ isClose: true }, { where: { matchingPairId: bot.matchingPairId, userId: bot.userId } });
           console.log('Bots updated successfully');
