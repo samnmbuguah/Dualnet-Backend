@@ -8,7 +8,6 @@ async function listFuturesOrderBook(settle, contract, opts) {
         .then(value => {
             // console.log('API called successfully. Returned data: ', value.body);
             const firstBid = value.body.bids[0];
-            // console.log('First bid: ', firstBid.p);
             return firstBid;
         })
         .catch(error => {
