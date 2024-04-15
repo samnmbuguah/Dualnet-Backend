@@ -8,8 +8,13 @@ function getContractDetails(settle, contract) {
         .then(response => {
             const contractDetails = response.body.find(item => item.name === contract);
             if (contractDetails) {
-                // console.log('Contract data fetched:', contractDetails);
-                return contractDetails; // Return the contract details
+                // Return the required contract details
+                return {
+                    name: contractDetails.name,
+                    lastPrice: contractDetails.lastPrice,
+                    markPrice: contractDetails.markPrice,
+                    indexPrice: contractDetails.indexPrice
+                };
             } else {
                 console.log(`Contract ${contract} not found.`);
                 return null; // Return null if the contract is not found
@@ -19,9 +24,10 @@ function getContractDetails(settle, contract) {
             console.error(error.response);
             return null; // Return null if there's an error
         });
+    
 }
 
 module.exports = getContractDetails;
 
-// Usage:
-getContractDetails('usdt', 'MOVEZ_USDT');
+// // Usage:
+// getContractDetails('usdt', 'MOVEZ_USDT');
