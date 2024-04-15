@@ -1,6 +1,6 @@
 const GateApi = require('gate-api');
 const client = new GateApi.ApiClient();
-const getFirstAsk = require('./getFirstAsk');
+const getCurrentSpotPrice = require('./getCurrentSpotPrice');
 const getApiCredentials = require('./getApiCredentials');
 const Bots = require('../models/BotsModel.js');
 const uuid = require('uuid');
@@ -60,7 +60,8 @@ async function trade(pair, amount, lastPrice, quantoMultiplier, takerFeeRate, su
         }
 
         client.setApiKeySecret(credentials.apiKey, credentials.apiSecret);
-        firstAskPrice =  await getFirstAsk(pair);
+        firstAskPrice = await getCurrentSpotPrice(pair);
+        firstAskPrice = parseFloat(firstAskPrice.lowestAsk);
     } catch (error) {
         console.error(error.message);
         return;
