@@ -5,8 +5,6 @@ const Bots = require('../models/BotsModel.js');
 const getCurrentSpotPrice = require('./getCurrentSpotPrice');
 const cron = require('node-cron');
 
-const closeByProfitThreshold = 1.3; // 1.3%
-
 async function closeByProfit(io, bots) {
     // Group bots by userId and matchingPairId and aggregate amountIncurred
     const groupedBots = bots.reduce((acc, bot) => {
@@ -38,8 +36,9 @@ async function closeByProfit(io, bots) {
         const spotBalance = await fetchSpotBalance(group.matchingPairId, group.userId);
         let availableSpotBalance = parseFloat(spotBalance.available);
 
-        let currentSpotPrice = parseFloat(await getCurrentSpotPrice(group.matchingPairId));
-
+        let currentSpotData = await getCurrentSpotPrice(group.matchingPairId);
+        let currentSpotPrice = parseFloat(currentSpotData.last);
+        
         // Calculate the current value of the spot trade and the futures position
         let currentSpotValue = currentSpotPrice * availableSpotBalance;
         let currentFuturesValue = ((-currentFuturesPosition.size) * parseFloat(currentFuturesPosition.markPrice) * group.quantoMultiplier) + parseFloat(currentFuturesPosition.unrealisedPnl);
@@ -55,7 +54,9 @@ async function closeByProfit(io, bots) {
             amountIncurred: group.amountIncurred,
             pnlValue: pnlValue,
             percentagePnl: percentagePnl,
-            liqPrice: currentFuturesPosition.liqPrice
+            liqPrice: currentFuturesPosition.liqPrice,
+            profitThreshold: group.profitThreshold,
+
         }
         
         // If botDataForUsers for this user doesn't exist, create it
@@ -65,7 +66,7 @@ async function closeByProfit(io, bots) {
         // Add botData to the array for this user
         botDataForUsers[group.userId].push(botData);
         // If the percentage PNL is greater than the close by profit threshold, close the trade
-        if (percentagePnl > closeByProfitThreshold) {
+        if (percentagePnl > group.profitThreshold) {
             sellSpotAndLongFutures(group.matchingPairId, group.userId);
             // Update the isClose field of the bots in the group
             for (const bot of group.bots) {
@@ -83,6 +84,3 @@ async function closeByProfit(io, bots) {
 
 
 module.exports = closeByProfit;
-
-
-
