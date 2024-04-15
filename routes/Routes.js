@@ -52,9 +52,9 @@ router.post('/trade',verifyToken, async (req, res) => {
 });
 
 router.post('/close-trade',verifyToken, async (req, res) => {
-    const { pair, subClientId } = req.body;
+    const { pair, subClientId, futuresSize, spotSize, positionId } = req.body;
     try {
-        await sellSpotAndLongFutures(pair, subClientId);
+        await sellSpotAndLongFutures(pair, subClientId, futuresSize, spotSize,positionId);
         res.status(200).json({message:'Trade closed successfully', status:200});
     } catch (error) {
         console.error('Error in closing trade:', error.response ? error.response.data : error);
