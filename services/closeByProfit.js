@@ -17,6 +17,7 @@ async function closeByProfit(io, bots) {
                 leverage: bot.leverage,
                 settle: bot.settle,
                 quantoMultiplier: bot.quantoMultiplier,
+                profitThreshold: bot.profitThreshold,
                 bots: []
             };
         }
