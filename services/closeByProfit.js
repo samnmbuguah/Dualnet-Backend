@@ -33,6 +33,7 @@ async function closeByProfit(io, bots) {
     for (const key in groupedBots) {
         const group = groupedBots[key];
 
+        // Fetch current futures position and spot balance
         const currentFuturesPosition = await fetchPosition(group.settle, group.matchingPairId, group.userId);
         const spotBalance = await fetchSpotBalance(group.matchingPairId, group.userId);
         let availableSpotBalance = parseFloat(spotBalance.available);
@@ -44,30 +45,37 @@ async function closeByProfit(io, bots) {
         let currentSpotValue = currentSpotPrice * availableSpotBalance;
         let currentFuturesValue = ((-currentFuturesPosition.size) * parseFloat(currentFuturesPosition.markPrice) * group.quantoMultiplier) + parseFloat(currentFuturesPosition.unrealisedPnl);
 
-        // Calculate the PNL value and the percentage PNL
-        const pnlValue = (currentSpotValue + currentFuturesValue) - group.amountIncurred;
-        const percentagePnl = (pnlValue / group.amountIncurred) * 100;
+        // Calculate the total PNL value for the group
+        const totalPnlValue = (currentSpotValue + currentFuturesValue) - group.amountIncurred;
 
-        // Emit the bot data
-        let botData= {
-            matchingPairId: group.matchingPairId,
-            leverage: group.leverage,
-            amountIncurred: group.amountIncurred,
-            pnlValue: pnlValue,
-            percentagePnl: percentagePnl,
-            liqPrice: currentFuturesPosition.liqPrice,
-            profitThreshold: group.profitThreshold,
-
-        }
-        
         // If botDataForUsers for this user doesn't exist, create it
         if (!botDataForUsers[group.userId]) {
             botDataForUsers[group.userId] = [];
         }
-        // Add botData to the array for this user
-        botDataForUsers[group.userId].push(botData);
-        // If the percentage PNL is greater than the close by profit threshold, close the trade
-        if (percentagePnl > group.profitThreshold) {
+
+        // Iterate over each bot in the group
+        for (const bot of group.bots) {
+            // Calculate the PNL value for the bot based on its contribution to the total amountIncurred
+            const pnlValue = totalPnlValue * (bot.amountIncurred / group.amountIncurred);
+            const percentagePnl = (pnlValue / bot.amountIncurred) * 100;
+
+            // Emit the bot data
+            let botData = {
+                matchingPairId: bot.matchingPairId,
+                leverage: bot.leverage,
+                amountIncurred: bot.amountIncurred,
+                pnlValue: pnlValue,
+                percentagePnl: percentagePnl,
+                liqPrice: currentFuturesPosition.liqPrice,
+                profitThreshold: bot.profitThreshold,
+            }
+
+            // Add botData to the array for this user
+            botDataForUsers[group.userId].push(botData);
+        }
+
+        // If the total percentage PNL is greater than the close by profit threshold, close the trade
+        if ((totalPnlValue / group.amountIncurred) * 100 > group.profitThreshold) {
             sellSpotAndLongFutures(group.matchingPairId, group.userId);
             // Update the isClose field of the bots in the group
             for (const bot of group.bots) {
@@ -75,13 +83,12 @@ async function closeByProfit(io, bots) {
             }
         }
     }
-        // Emit botData for each user
+
+    // Emit botData for each user
     for (const userId in botDataForUsers) {
         const userIdInt = parseInt(userId, 10);
         io.to(userIdInt).emit('botData', botDataForUsers[userId]);
         console.log("botDataForUsers", botDataForUsers[userId])
     }
 }
-
-
 module.exports = closeByProfit;
