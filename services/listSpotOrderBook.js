@@ -6,9 +6,9 @@ const api = new GateApi.SpotApi(client);
 async function listOrderBook(currencyPair, opts) {
     return api.listOrderBook(currencyPair, opts)
         .then(value => {
-            const firstAsk = value.body.asks[0];
-            // console.log('First ask: ', firstAsk);
-            return firstAsk;
+            const lowestAsk = value.body.asks[0];
+            // console.log('Lowest ask: ', lowestAsk);
+            return lowestAsk;
         })
         .catch(error => {
             console.error(error);
