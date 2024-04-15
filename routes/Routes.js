@@ -79,4 +79,20 @@ router.post('/get-balances', async (req, res) => {
     }
 });
 
+router.put('/updateProfitThreshold', async (req, res) => {
+    const { profitThreshold } = req.body;
+
+    if (profitThreshold === undefined) {
+        return res.status(400).send({ error: 'profitThreshold is required' });
+    }
+
+    try {
+        await Bot.update({ profitThreshold }, { where: {} });
+        res.send({ message: 'Updated successfully' });
+    } catch (error) {
+        console.error('Error updating profitThreshold:', error);
+        res.status(500).send({ error: 'Error updating profitThreshold' });
+    }
+});
+
 module.exports = router;
