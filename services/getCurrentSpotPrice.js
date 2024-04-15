@@ -28,9 +28,9 @@ async function getCurrentSpotPrice(pair) {
 }
 
 // Schedule the task to run at the top of every hour
-cron.schedule('* * * * *', () => {
-  getCurrentSpotPrice('BTC_USDT');
-  // getCurrentSpotPrice('ETH_USDT');
-});
+// cron.schedule('* * * * *', () => {
+//   getCurrentSpotPrice('BTC_USDT');
+//   // getCurrentSpotPrice('ETH_USDT');
+// });
 
 module.exports = getCurrentSpotPrice;
