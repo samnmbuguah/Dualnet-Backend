@@ -7,7 +7,7 @@ const moment = require('moment');
 
 
 const maxRetries = 5;
-const retryDelay = 5000; 
+const retryDelay = 300000; 
 
 async function fetchTopScans() {
     return await Scans.findAll({
@@ -47,15 +47,15 @@ async function StreamPrices( io, retryCount = 0) {
             attributes: ['id', 'amountPrecision', 'fundingRate'],
             where: {
                 fundingRate: {
-                    [Op.gt]: 0 // greater than 0.05
+                    [Op.gt]: 0.0001
                 }
             },
             order: [
                 ['fundingRate', 'DESC']
             ],
-            limit: 30
+            limit: 10
         });
-        let tickers, amountPrecisions;
+        let tickers, amountPrecisions, fundingRates;
         if (!records || records.length === 0) {
             console.error('No matching pairs found . Using default tickers...');
             tickers = ['BTC_USDT', "ETH_USDT"];
@@ -63,6 +63,7 @@ async function StreamPrices( io, retryCount = 0) {
         } else {
             tickers = records.map(record => record.id);
             amountPrecisions = records.map(record => record.amountPrecision);
+            fundingRates = records.map(record => record.fundingRate);
         }
 
         io.on('error', (error) => {
@@ -72,7 +73,7 @@ async function StreamPrices( io, retryCount = 0) {
         // Pass parameters to PollPrices constructor
         const pollPrices = new PollPrices(tickers, "usdt", amountPrecisions); 
         fetchAndLogPrices(pollPrices, io);
-        setInterval(() => fetchAndLogPrices(pollPrices, io), 3000000);
+        setInterval(() => fetchAndLogPrices(pollPrices, io), 300000);
 
         // Listen for the 'updateScans' event from the client and handle it
         io.on('connection', (socket) => {
