@@ -19,7 +19,7 @@ const trade = require("../services/trade.js");
 const setLeverage = require("../services/setLeverage.js");
 const sellSpotAndLongFutures = require("../services/closeTrades.js");
 const fetchBothBalances = require("../services/fetchBalances.js");
-
+const Bots = require("../models/BotsModel.js");
 const router = express.Router();
 
 router.post('/login', Login);
@@ -87,8 +87,8 @@ router.put('/updateProfitThreshold', async (req, res) => {
     }
 
     try {
-        await Bot.update({ profitThreshold }, { where: {} });
-        res.send({ message: 'Updated successfully' });
+        await Bots.update({ profitThreshold }, { where: {} });
+        res.send({ message: 'Updated successfully'});
     } catch (error) {
         console.error('Error updating profitThreshold:', error);
         res.status(500).send({ error: 'Error updating profitThreshold' });
