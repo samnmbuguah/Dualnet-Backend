@@ -19,7 +19,13 @@ const Scans = db.define('Scans', {
         type: Sequelize.FLOAT
     },
     fundingRate: {
-        type: Sequelize.FLOAT
+        type: Sequelize.FLOAT,
+        validate: {
+        max: {
+            args: 1,
+            msg: 'fundingRate must be less than or equal to 1'
+        }
+    }
     },
     quantoMultiplier: {
         type: Sequelize.STRING
