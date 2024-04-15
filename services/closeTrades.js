@@ -4,7 +4,7 @@ const Bots = require('../models/BotsModel.js');
 const fetchSpotBalance = require('./fetchSpotBalance');
 const getApiCredentials = require('./getApiCredentials');
 
-async function sellSpotAndLongFutures(pair, subClientId) {
+async function sellSpotAndLongFutures(pair, subClientId, futuresSize = 0, spotSize, positionId) {
     try {
         const credentials = await getApiCredentials(subClientId);
         if (!credentials) {
@@ -28,7 +28,7 @@ async function sellSpotAndLongFutures(pair, subClientId) {
         order.account = "spot";
         order.type = "market";
         order.currencyPair = pair; 
-        order.amount = spotBalance.available; // The full amount
+        order.amount = spotSize; // The full amount
         order.side = "sell"; // Sell the spot balance
         order.timeInForce = 'ioc';
 
@@ -39,9 +39,9 @@ async function sellSpotAndLongFutures(pair, subClientId) {
         // Create a futures order to close the entire futures position
         const futuresOrder = new GateApi.FuturesOrder();
         futuresOrder.contract = pair;
-        futuresOrder.size = 0;// Close the entire position
+        futuresOrder.settle = 'usdt';
+        futuresOrder.size = -futuresSize;// Close the entire position
         futuresOrder.price = '0'; // Market order  
-        futuresOrder.close = true;
         futuresOrder.tif = 'ioc'; // Time in force
 
         futuresApi.createFuturesOrder('usdt', futuresOrder)
@@ -51,8 +51,7 @@ async function sellSpotAndLongFutures(pair, subClientId) {
        // Update the bots table
         await Bots.update({ isClose: true }, {
             where: {
-                userId: subClientId,
-                matchingPairId: pair
+                positionId: positionId
             }
         }); 
     } catch (error) {
@@ -61,8 +60,3 @@ async function sellSpotAndLongFutures(pair, subClientId) {
 }
 
 module.exports = sellSpotAndLongFutures;
-
-// // Call the function
-// sellSpotAndLongFutures('LAI_USDT', 19)
-//     .then(() => console.log('Spot and futures orders created'))
-//     .catch(error => console.error('Error during trading:', error));
