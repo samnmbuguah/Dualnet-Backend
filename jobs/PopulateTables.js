@@ -9,7 +9,7 @@ async function populateTables() {
 
     try {
         // Fetch matching pairs from Gate.io API
-        const matchingPairs = await findMatchingPairs();
+        const matchingPairs = (await findMatchingPairs()).filter(pair => pair !== null);
 
         // Insert data into tables
         if (matchingPairs) {
