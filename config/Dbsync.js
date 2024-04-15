@@ -16,7 +16,7 @@ Scans.sync()
     })
     .then(() => {
         console.log('Users table has been synced');
-        return MatchingPairs.sync();
+        return MatchingPairs.sync({force: true});
     })
     .then(() => {
         console.log('MatchingPairs table has been synced');
