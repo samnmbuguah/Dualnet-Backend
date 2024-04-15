@@ -47,13 +47,13 @@ async function StreamPrices( io, retryCount = 0) {
             attributes: ['id', 'amountPrecision', 'fundingRate'],
             where: {
                 fundingRate: {
-                    [Op.gt]: 0.0001
+                    [Op.gt]: 0.009
                 }
             },
             order: [
                 ['fundingRate', 'DESC']
             ],
-            limit: 10
+            limit: 20
         });
         let tickers, amountPrecisions, fundingRates;
         if (!records || records.length === 0) {
