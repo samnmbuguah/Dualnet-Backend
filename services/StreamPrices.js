@@ -15,6 +15,9 @@ async function fetchTopScans() {
             percentageDifference: {
                 [Op.gt]: 0 // greater than 0
             },
+            fundingRate: {
+                [Op.gt]: 0 // greater than 0
+            },
             updatedAt: {
                 [Op.gte]: moment().subtract(5, 'minutes').toDate() // updated within the last 5 minutes
             }
@@ -44,16 +47,11 @@ async function fetchAndLogPrices(pollPrices, io) {
 async function StreamPrices( io, retryCount = 0) {
     try {
         const records = await MatchingPairs.findAll({
-            attributes: ['id', 'amountPrecision', 'fundingRate'],
-            where: {
-                fundingRate: {
-                    [Op.gt]: 0.009
-                }
-            },
+            attributes: ['id', 'precision', 'fundingRate'],
             order: [
                 ['fundingRate', 'DESC']
             ],
-            limit: 20
+            limit: 30
         });
         let tickers, amountPrecisions, fundingRates;
         if (!records || records.length === 0) {
@@ -62,7 +60,7 @@ async function StreamPrices( io, retryCount = 0) {
             amountPrecisions = [2, 2]; // default values
         } else {
             tickers = records.map(record => record.id);
-            amountPrecisions = records.map(record => record.amountPrecision);
+            amountPrecisions = records.map(record => record.precision);
             fundingRates = records.map(record => record.fundingRate);
         }
 
