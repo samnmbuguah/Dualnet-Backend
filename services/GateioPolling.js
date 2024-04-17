@@ -16,8 +16,8 @@ class PollPrices {
             const spotResponse = await getCurrentSpotPrice(ticker);
             const futuresResponse =  await getContractDetails(this.settle, ticker);
 
-            const spotPrice = parseFloat(spotResponse.lowestAsk);
-            const futuresPrice = parseFloat(futuresResponse.indexPrice);
+            const spotPrice = parseFloat(spotResponse.last);
+            const futuresPrice = parseFloat(futuresResponse.lastPrice);
 
             
             let valueDifference = (futuresPrice - spotPrice).toFixed(this.amountPrecisions[index] + 2);
