@@ -8,6 +8,7 @@ const socketIO = require('socket.io');
 const server = require('http').createServer(app); // Create server with Express app
 const checkTrades = require('./services/checkTrades.js');
 const closeByProfit = require('./services/closeByProfit.js');
+const updateFundingRate = require('./services/getFundingRate.js');
 const Bots = require('./models/BotsModel.js');
 
 // Check for required environment variables
@@ -102,5 +103,6 @@ cron.schedule('* * * * *', async () => {
     }
 });
 
-cron.schedule('0 * * * *', populateTables);
+cron.schedule('0 0 * * *', populateTables);
+cron.schedule('0 * * * *', updateFundingRate);
 setInterval(checkTrades, 1000);
