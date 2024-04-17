@@ -32,7 +32,7 @@ function findMatchingPairs() {
             .filter(spotPair => futuresContractsMap.has(spotPair.id))
             .map(spotPair => {
                 const contract = futuresContractsMap.get(spotPair.id);
-                const fundingRate = parseFloat(contract.fundingRate)*100;
+                const fundingRate = parseFloat((contract.fundingRate * 100).toFixed(6));
                 if (fundingRate > 1) {
                     return null;
                 }
