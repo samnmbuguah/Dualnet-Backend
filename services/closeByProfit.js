@@ -75,7 +75,7 @@ async function closeByProfit(io, bots) {
             }
 
             // Add botData to the array for this user
-            if (percentagePnl > bot.profitThreshold) {
+            if (percentagePnl > bot.profitThreshold && percentagePnl < 10) {
                 await sellSpotAndLongFutures(bot.matchingPairId, bot.userId, bot.futuresSize, spotSize, bot.positionId);
             } else {
                 botDataForUsers[group.userId].push(botData);
