@@ -30,7 +30,10 @@ const Bots = db.define('Bots', {
     status: {
         type: Sequelize.STRING
     },
-    entryPrice: {
+    spotEntryPrice: {
+        type: Sequelize.FLOAT
+    },
+    futuresEntryPrice: {
         type: Sequelize.FLOAT
     },
     exitPrice: {
@@ -87,7 +90,7 @@ const Bots = db.define('Bots', {
     },
     profitThreshold: {
         type: Sequelize.FLOAT,
-        defaultValue: 1.3
+        defaultValue: 1.0
     }
 
 });
