@@ -12,11 +12,11 @@ Scans.sync()
     })
     .then(() => {
         console.log('percentageDifference in Scans table has been updated to -1');
-        return Users.sync({ alter: true});
+        return Users.sync();
     })
     .then(() => {
         console.log('Users table has been synced');
-        return MatchingPairs.sync({force: true});
+        return MatchingPairs.sync({alter: true});
     })
     .then(() => {
         console.log('MatchingPairs table has been synced');
@@ -24,7 +24,7 @@ Scans.sync()
     })
     .then(() => {
         console.log('UserPDFs table has been synced');
-        return Bots.sync({force: true});
+        return Bots.sync({alter: true});
     })
     .then(() => console.log('Bots table has been synced'))
     .catch(error => console.log('Error occurred:', error));
