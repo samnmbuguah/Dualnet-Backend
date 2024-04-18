@@ -7,11 +7,11 @@ const Bots = require('../models/BotsModel.js');
 
 Scans.sync()
     .then(() => {
-        console.log('Scans table has been synced');
-        return Scans.update({ percentageDifference: -1 }, { where: {} });
+        console.log('Syncing Tables');
+        return Scans.sync({force: true});
     })
     .then(() => {
-        console.log('percentageDifference in Scans table has been updated to -1');
+        console.log('Scans table has been reset');
         return Users.sync();
     })
     .then(() => {
