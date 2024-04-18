@@ -1,8 +1,7 @@
 const GateApi = require('gate-api');
 const Transfer = GateApi.Transfer;
 const client = require('./gateClient');
-const { fetchSpotBalances, fetchFuturesBalances } = require('./fetchBalances');
-
+const fetchBothBalances = require('./fetchBalances');
 const api = new GateApi.WalletApi(client);
 
 async function transferFunds(from, to, amount) {
@@ -19,17 +18,20 @@ async function transferFunds(from, to, amount) {
       return value.body;
     })
     .catch(error => {
-      console.error('Error message: ', error.response.data.message);
-      console.error('Error code: ', error.response.status);
+      if (error.response) {
+        console.error('Error message: ', error.response.data.message);
+        console.error('Error code: ', error.response.status);
+      } else {
+        console.error('Error: ', error.message);
+      }
     });
 }
 
 async function balanceAccounts() {
-  const spotBalances = await fetchSpotBalances(client);
-  const futuresBalances = await fetchFuturesBalances(client);
+  const [spotBalances, futuresBalances] = await fetchBothBalances(18);
 
-  const spotUsdtBalance = spotBalances.find(b => b.currency === 'USDT')?.available || 0;
-  const futuresUsdtBalance = futuresBalances.available || 0;
+  const spotUsdtBalance = parseFloat(spotBalances) || 0;
+  const futuresUsdtBalance = parseFloat(futuresBalances) || 0;
 
   const difference = Math.abs(spotUsdtBalance - futuresUsdtBalance) / 2;
   const amount = Math.round(difference * 100) / 100;
