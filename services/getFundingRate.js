@@ -6,23 +6,23 @@ const settle = "usdt";
 
 const updateFundingRate = async () => {
     try {
-        console.log('Fetching futures contracts...');
+        console.log('Updating Funding Rates...');
         const futuresApi = new GateApi.FuturesApi(client);
         
         const value = await futuresApi.listFuturesContracts(settle);
         const contracts = value.body;
         for (const contract of contracts) {
-            const fundingRate = parseFloat(contract.fundingRate);
+            const fundingRate = parseFloat((contract.fundingRate * 100).toFixed(6));
             // Update the fundingRate field
             await Scans.update({ fundingRate }, { where: { matchingPairId: contract.name } });
-            console.log(`Updated fundingRate for ${contract.name} to ${fundingRate}`);
         }
+        console.log('Funding Rates updated successfully');
     } catch (error) {
         console.error(`Failed to update funding rates: ${error}`);
     }
 };
 
-// Schedule a cron job to run at the top of every hour
+// // Schedule a cron job to run at the top of every hour
 // cron.schedule('0 * * * *', updateFundingRate);
 
 // updateFundingRate()
