@@ -12,4 +12,4 @@ async function disableDualMode(settle) {
     }
 }
 
-disableDualMode('usdt');
+disableDualMode('usdt',   true);
