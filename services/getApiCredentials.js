@@ -9,7 +9,7 @@ async function getApiCredentials(subClientId) {
     try {
         const user = await Users.findOne({ where: { id: subClientId } });
         if (user) {
-            console.log(`Fetched API credentials for user with id ${subClientId}`);
+            // console.log(`Fetched API credentials for user with id ${subClientId}`);
             return { apiKey: user.api_key, apiSecret: user.api_secret };
         } else {
             console.error(`User with id ${subClientId} not found.`);
