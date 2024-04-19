@@ -36,8 +36,8 @@ async function fetchAndLogPrices(pollPrices, io) {
   // If fetchAndUpdateScans was successful, fetch top scans from the database
   if (updateResult) {    
     // Emit top scans to the client
-    // const topScans = await fetchTopScans();
-    // io.emit("topScans", topScans);
+    const topScans = await fetchTopScans();
+    io.emit("topScans", topScans);
 
     // Recursively call fetchAndLogPrices every 60 seconds
     setTimeout(() => fetchAndLogPrices(pollPrices, io), 60000);
@@ -50,7 +50,7 @@ async function updateTickersAndPrecisions(pollPrices) {
     attributes: ["id", "precision", "fundingRate"],
     where: { fundingRate: { [Op.gte]: 0.01 } },
     order: [["fundingRate", "DESC"]],
-    limit:300,
+    limit:500,
   });
 
   if (!records || records.length === 0) {

@@ -6,80 +6,51 @@ const getCurrentSpotPrice = require('./getCurrentSpotPrice');
 const cron = require('node-cron');
 
 async function closeByProfit(io, bots) {
-    // Group bots by userId and matchingPairId and aggregate amountIncurred
-    const groupedBots = bots.reduce((acc, bot) => {
-        const key = `${bot.matchingPairId}-${bot.userId}`;
-        if (!acc[key]) {
-            acc[key] = {
-                matchingPairId: bot.matchingPairId,
-                userId: bot.userId,
-                amountIncurred: 0,
-                leverage: bot.leverage,
-                settle: bot.settle,
-                quantoMultiplier: bot.quantoMultiplier,
-                profitThreshold: bot.profitThreshold,
-                bots: []
-            };
-        }
-        acc[key].amountIncurred += bot.amountIncurred;
-        acc[key].bots.push(bot);
-        return acc;
-    }, {});
-
     const botDataForUsers = {};
 
-    console.log("completed Grouping of bots", groupedBots)
-    // Iterate over each group of bots
-    for (const key in groupedBots) {
-        const group = groupedBots[key];
-
+    // Iterate over each bot
+    for (const bot of bots) {
         // Fetch current futures position and spot balance
-        const currentFuturesPosition = await fetchPosition(group.settle, group.matchingPairId, group.userId);
-        const spotBalance = await fetchSpotBalance(group.matchingPairId, group.userId);
+        const currentFuturesPosition = await fetchPosition(bot.settle, bot.matchingPairId, bot.userId);
+        const spotBalance = await fetchSpotBalance(bot.matchingPairId, bot.userId);
         let availableSpotBalance = parseFloat(spotBalance.available);
 
-        let currentSpotData = await getCurrentSpotPrice(group.matchingPairId);
-        let currentSpotPrice = parseFloat(currentSpotData.last);
+        let currentSpotData = await getCurrentSpotPrice(bot.matchingPairId);
+        let currentSpotPrice = parseFloat(currentSpotData.highestBid);
+        const spotSize = Math.min(Number(availableSpotBalance), Number(bot.spotSize));
         
         // Calculate the current value of the spot trade and the futures position
-        let currentSpotValue = currentSpotPrice * availableSpotBalance;
-        let currentFuturesValue = ((-currentFuturesPosition.size) * parseFloat(currentFuturesPosition.markPrice) * group.quantoMultiplier) + parseFloat(currentFuturesPosition.unrealisedPnl);
+        let currentSpotValue = currentSpotPrice * spotSize;
+        let currentFuturesValue = (bot.futuresSize * parseFloat(currentFuturesPosition.markPrice));
 
-        // Calculate the total PNL value for the group
-        const totalPnlValue = (currentSpotValue + currentFuturesValue) - group.amountIncurred;
+        // Calculate the PNL value for the bot
+        const pnlValue = (currentSpotValue + currentFuturesValue) - bot.amountIncurred;
+        const percentagePnl = (pnlValue / bot.amountIncurred) * 100;
 
-        // If botDataForUsers for this user doesn't exist, create it
-        if (!botDataForUsers[group.userId]) {
-            botDataForUsers[group.userId] = [];
+        // Emit the bot data
+        let botData = {
+          matchingPairId: bot.matchingPairId,
+          leverage: bot.leverage,
+          amountIncurred: bot.amountIncurred,
+          pnlValue: pnlValue,
+          percentagePnl: percentagePnl,
+          liqPrice: currentFuturesPosition.liqPrice,
+          profitThreshold: bot.profitThreshold,
+          futuresSize: bot.futuresSize,
+          spotSize: spotSize,
+          positionId: bot.positionId,
+          createdAt: bot.createdAt,
+        };
+
+        // Add botData to the array for this user
+        if (!botDataForUsers[bot.userId]) {
+            botDataForUsers[bot.userId] = [];
         }
 
-        // Iterate over each bot in the group
-        for (const bot of group.bots) {
-            // Calculate the PNL value for the bot based on its contribution to the total amountIncurred
-            const pnlValue = totalPnlValue * (bot.amountIncurred / group.amountIncurred);
-            const percentagePnl = (pnlValue / bot.amountIncurred) * 100;
-            const spotSize = (availableSpotBalance * (bot.amountIncurred / group.amountIncurred)).toFixed(8)
-
-            // Emit the bot data
-            let botData = {
-                matchingPairId: bot.matchingPairId,
-                leverage: bot.leverage,
-                amountIncurred: bot.amountIncurred,
-                pnlValue: pnlValue,
-                percentagePnl: percentagePnl,
-                liqPrice: currentFuturesPosition.liqPrice,
-                profitThreshold: bot.profitThreshold,
-                futuresSize: bot.futuresSize,
-                spotSize: spotSize,
-                positionId: bot.positionId
-            }
-
-            // Add botData to the array for this user
-            if (percentagePnl > bot.profitThreshold && percentagePnl < 10) {
-                await sellSpotAndLongFutures(bot.matchingPairId, bot.userId, bot.futuresSize, spotSize, bot.positionId);
-            } else {
-                botDataForUsers[group.userId].push(botData);
-            }
+        if (percentagePnl > bot.profitThreshold) {
+            await sellSpotAndLongFutures(bot.matchingPairId, bot.userId, bot.futuresSize, spotSize, bot.positionId);
+        } else {
+            botDataForUsers[bot.userId].push(botData);
         }
     }
 
@@ -87,7 +58,7 @@ async function closeByProfit(io, bots) {
     for (const userId in botDataForUsers) {
         const userIdInt = parseInt(userId, 10);
         io.to(userIdInt).emit('botData', botDataForUsers[userId]);
-        console.log("botDataForUsers", botDataForUsers[userId])
+        // console.log("botDataForUsers", botDataForUsers[userId])
     }
 }
 module.exports = closeByProfit;

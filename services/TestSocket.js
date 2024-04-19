@@ -6,7 +6,7 @@ let lastNonEmptyTopScansTimestamp = null;
 
 socket.on("connect", () => {
   console.log("Connected to the server");
-  socket.emit("join", 18);
+  socket.emit("join", 3);
   // Emit the 'updateScans' event every 30 seconds
 //   setInterval(() => {
 //     console.log("Sending updateScans event to the server");
@@ -21,7 +21,7 @@ socket.on("topScans", (data) => {
     const currentTimestamp = Date.now();
     if (lastNonEmptyTopScansTimestamp) {
       const timeDifference = (currentTimestamp - lastNonEmptyTopScansTimestamp)/60000;
-      console.log(`Time since last non-empty topScans: ${timeDifference} seconds`);
+      console.log(`Time since last non-empty topScans: ${timeDifference} Minutes`);
     }
     lastNonEmptyTopScansTimestamp = currentTimestamp;
   }
