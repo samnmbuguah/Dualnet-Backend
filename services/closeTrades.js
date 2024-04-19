@@ -15,34 +15,40 @@ async function sellSpotAndLongFutures(pair, subClientId, futuresSize = 0, spotSi
         
         const spotApi = new GateApi.SpotApi(client);
         const futuresApi = new GateApi.FuturesApi(client);
-        // Fetch the spot balance for the base currency of the pair
-        const baseCurrency = pair.split('_')[0]; // Extract base currency from pair
-        const spotBalance = await fetchSpotBalance(baseCurrency, subClientId);
-        if (!spotBalance) {
-            console.error(`No spot balance found for ${baseCurrency}`);
-            return;
-        }
-
+        
         // Create a spot order to sell the entire spot balance
         const order = new GateApi.Order();
         order.account = "spot";
         order.type = "market";
         order.currencyPair = pair; 
-        order.amount = spotSize; // The full amount
-        order.side = "sell"; // Sell the spot balance
+        order.amount = spotSize; 
+        order.side = "sell";
         order.timeInForce = 'ioc';
+        
+        // Fetch the spot balance for the base currency of the pair
+        const baseCurrency = pair.split('_')[0]; // Extract base currency from pair
+        const spotBalance = await fetchSpotBalance(baseCurrency, subClientId);
+        // Convert spotBalance.available and spotSize to numbers for comparison
+        const availableSpotBalance = Number(spotBalance.available);
+        const desiredSpotSize = Number(spotSize);
+
+        // If available spot balance is less than the desired spot size, use the available spot balance
+        if (availableSpotBalance < desiredSpotSize) {
+            order.amount = spotBalance.available;
+        }
 
         // Try to create the spot order
-        const response = await spotApi.createOrder(order);
-        console.log('Spot close order response', response.body);
-
+        spotApi.createOrder(order)
+        .then(response => console.log('Spot sell order response', response.body))
+        .catch(error => console.error(error.response));
+        
         // Create a futures order to close the entire futures position
         const futuresOrder = new GateApi.FuturesOrder();
         futuresOrder.contract = pair;
         futuresOrder.settle = 'usdt';
-        futuresOrder.size = -futuresSize;// Close the entire position
+        futuresOrder.size = -futuresSize;
         futuresOrder.price = '0'; // Market order  
-        futuresOrder.tif = 'ioc'; // Time in force
+        futuresOrder.tif = 'ioc'; 
 
         futuresApi.createFuturesOrder('usdt', futuresOrder)
             .then(response => console.log('Futures close order response', response.body))
@@ -54,8 +60,10 @@ async function sellSpotAndLongFutures(pair, subClientId, futuresSize = 0, spotSi
                 positionId: positionId
             }
         }); 
+        return true;
     } catch (error) {
         console.error('Error during trading:', error);
+        return false;
     }
 }
 
