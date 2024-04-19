@@ -6,9 +6,9 @@ const Scans = require('../models/ScansModel.js');
 const Bots = require('../models/BotsModel.js');
 
 console.log("Syncing Tables");
-Scans.sync({ force: true })
+Scans.sync()
   .then(() => {
-    console.log("Scans table has been reset");
+    console.log("Scans table has been synced");
     return Users.sync();
   })
   .then(() => {
