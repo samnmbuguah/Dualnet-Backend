@@ -12,7 +12,7 @@ async function fetchPosition(settle, contract, subClientId) {
     const api = new GateApi.FuturesApi(client);
     return api.getPosition(settle, contract)
         .then(response => {
-            console.log('Futures position fetched. Size', response.body.size);
+            // console.log('Futures position fetched. Size', response.body);
             return response.body;
         })
         .catch(error => console.error(error.response));
@@ -21,5 +21,5 @@ async function fetchPosition(settle, contract, subClientId) {
 module.exports = fetchPosition;
 
 // // Call the function
-// fetchPosition('usdt', 'LAI_USDT',18)
+// fetchPosition('usdt', 'MOVEZ_USDT',3)
 //     .then(() => console.log('Futures position fetched successfully'))
