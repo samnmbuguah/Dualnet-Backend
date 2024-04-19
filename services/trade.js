@@ -9,23 +9,27 @@ let spotOrderId;
 let futuresOrderId;
 
 function createSpotBuyOrder(pair, amount) {
-    const spotApi = new GateApi.SpotApi(client);
-    console.log('Creating spot buy order...');
-    const order = new GateApi.Order();
-    order.account = 'spot'; 
-    order.currencyPair = pair;
-    order.amount = amount;
-    order.side = 'buy';
-    order.type = 'market'; 
-    order.timeInForce = 'fok';
-    
-    return spotApi.createOrder(order)
-    .then(response => {
-        spotOrderId = response.body.id;
-        console.log('Spot buy order created', response.body);
-        return response.body;
+  const spotApi = new GateApi.SpotApi(client);
+  console.log("Creating spot buy order...");
+  const order = new GateApi.Order();
+  order.account = "spot";
+  order.currencyPair = pair;
+  order.amount = amount;
+  order.side = "buy";
+  order.type = "market";
+  order.timeInForce = "fok";
+
+  return spotApi
+    .createOrder(order)
+    .then((response) => {
+      spotOrderId = response.body.id;
+      console.log("Spot buy order created", response.body);
+      return response.body;
     })
-    .catch(error => console.error(error.response.data));
+    .catch((error) => {
+      console.error(error.response.data);
+      throw error; // Throw the error to stop execution
+    });
 }
 
 function createFuturesShortOrder(settle, contract, size) {
@@ -75,88 +79,91 @@ async function trade(pair, amount, lastPrice, quantoMultiplier, takerFeeRate, su
         console.log('Size:', size);
         size = size * -1;
         
-        
-        const futuresResponse = await createFuturesShortOrder('usdt', pair, size);
         const spotResponse = await createSpotBuyOrder(pair, spotAmount);
-        console.log('Futures response:', futuresResponse);
-        console.log('Spot response:', spotResponse);
+        const futuresResponse = await createFuturesShortOrder('usdt', pair, size);
         
-        let futuresValue = futuresResponse.size * parseFloat(futuresResponse.fillPrice) * quantoMultiplier;
-        let amountIncurred = spotAmount - futuresValue;
+        let fillPrice = parseFloat(futuresResponse.fillPrice);
+        let multiplier = parseFloat(quantoMultiplier);
+        let futuresSize = -(parseFloat(futuresResponse.size))*multiplier;
+        let futuresValue = (futuresSize * fillPrice );
+        let takerFee = futuresValue * parseFloat(futuresResponse.tkfr);
+        futuresValue = futuresValue + takerFee;
+        let amountIncurred = (spotAmount + futuresValue)
         let positionId = uuid.v4();
 
         const futuresBot = {
-            userId: subClientId,
-            matchingPairId: pair,
-            futuresSize: futuresResponse.size,
-            spotSize: spotResponse.amount,
-            unrealisedPnl: 0,
-            realisedPnl: 0,
-            status: futuresResponse.status,
-            spotEntryPrice: spotResponse.avgDealPrice,
-            futuresEntryPrice: futuresResponse.fillPrice,
-            timestamp: new Date(),
-            leverage: leverage,
-            tradeType: 'short',
-            orderId: futuresResponse.id,
-            currentPrice: futuresResponse.fillPrice,
-            pNL: 0,
-            cumulativePNL: 0,
-            isClose: false,
-            taker: futuresResponse.tkfr,
-            spotValue: spotAmount,
-            futuresValue: futuresValue,
-            amountIncurred: amountIncurred,
-            quantoMultiplier: quantoMultiplier,
-            positionId: positionId,
+          userId: subClientId,
+          matchingPairId: pair,
+          futuresSize: futuresSize,
+          spotSize: futuresSize,
+          unrealisedPnl: 0,
+          realisedPnl: 0,
+          status: futuresResponse.status,
+          spotEntryPrice: spotResponse.avgDealPrice,
+          futuresEntryPrice: futuresResponse.fillPrice,
+          timestamp: new Date(),
+          leverage: leverage,
+          tradeType: "short",
+          orderId: futuresResponse.id,
+          currentPrice: futuresResponse.fillPrice,
+          pNL: 0,
+          cumulativePNL: 0,
+          isClose: false,
+          taker: takerFee,
+          spotValue: spotAmount,
+          futuresValue: futuresValue,
+          amountIncurred: amountIncurred,
+          quantoMultiplier: multiplier,
+          positionId: positionId,
         };
-        await Bots.upsert(futuresBot, { fields: ['tradeId', 'userId'] });
+        await Bots.create(futuresBot);
         console.log('Futures bot created:', futuresBot);
         const spotBot = {
-            userId: subClientId,
-            matchingPairId: pair,
-            spotSize: spotResponse.amount,
-            unrealisedPnl: 0,
-            realisedPnl: 0,
-            status: spotResponse.status,
-            spotEntryPrice: spotResponse.avgDealPrice,
-            futuresEntryPrice: futuresResponse.fillPrice,
-            timestamp: new Date(),
-            leverage: leverage,
-            tradeType: 'buy',
-            orderId: spotResponse.id,
-            currentPrice: spotResponse.avgDealPrice,
-            pNL: 0,
-            cumulativePNL: 0,
-            isClose: true,
-            taker: spotResponse.gtTakerFee,
-            spotValue: spotAmount,
-            futuresValue: futuresValue,
-            amountIncurred: amountIncurred,
-            quantoMultiplier: quantoMultiplier,
-            positionId: positionId,
+          userId: subClientId,
+          matchingPairId: pair,
+          spotSize: futuresSize,
+          unrealisedPnl: 0,
+          realisedPnl: 0,
+          status: spotResponse.status,
+          spotEntryPrice: spotResponse.avgDealPrice,
+          futuresEntryPrice: futuresResponse.fillPrice,
+          timestamp: new Date(),
+          leverage: leverage,
+          tradeType: "buy",
+          orderId: spotResponse.id,
+          currentPrice: spotResponse.avgDealPrice,
+          pNL: 0,
+          cumulativePNL: 0,
+          isClose: true,
+          taker: spotResponse.gtTakerFee,
+          spotValue: spotAmount,
+          futuresValue: futuresValue,
+          amountIncurred: amountIncurred,
+          quantoMultiplier: multiplier,
+          positionId: positionId,
         };
         console.log('Spot bot created:', spotBot);
 
-    await Bots.upsert(spotBot, { fields: ['tradeId', 'userId'] });
+        await Bots.create(spotBot);
+        return true;
 
     } catch (error) {
         console.error('Error in trade:', error.response ? error.response.data : error);
+        return false;
     }
 }
 
 module.exports = trade;
 
-
-
 // const tradeData = {
-//   pair: 'LAI_USDT',
-//   amount: '5',
-//   lastPrice: 0.04775,
-//   quantoMultiplier: '10',
-//   takerFeeRate: '0.00075',
-//   subClientId: 19,
-//   leverage: '1',
+//   pair: "POGAI_USDT",
+//   amount: "4",
+//   closeByProfit: "1",
+//   lastPrice: "0.000591",
+//   leverage: "1",
+//   quantoMultiplier: "10000",
+//   subClientId: "3",
+//   takerFeeRate: "0.00075",
 // };
 
 // trade(tradeData.pair, tradeData.amount, tradeData.lastPrice, tradeData.quantoMultiplier, tradeData.takerFeeRate, tradeData.subClientId, tradeData.leverage);
