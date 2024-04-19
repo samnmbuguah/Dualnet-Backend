@@ -43,22 +43,30 @@ router.post('/trade',verifyToken, async (req, res) => {
     const { pair, amount, lastPrice, quantoMultiplier, takerFeeRate, subClientId, leverage } = req.body;
     
      try {
-        await trade(pair, amount, lastPrice, quantoMultiplier, takerFeeRate,subClientId, leverage);
-        res.status(200).json('Trade executed successfully');
+        const result = await trade(pair, amount, lastPrice, quantoMultiplier, takerFeeRate,subClientId, leverage);
+        if (result) {
+            res.status(200).send("Trade executed successfully");
+        } else {
+            res.status(400).send("Trade execution failed");
+        }
     } catch (error) {
         console.error('Error in trade:', error.response ? error.response.data : error);
         res.status(500).json('Error executing trade');
     }
 });
 
-router.post('/close-trade',verifyToken, async (req, res) => {
+router.post('/close-trade', verifyToken, async (req, res) => {
     const { pair, subClientId, futuresSize, spotSize, positionId } = req.body;
     try {
-        await sellSpotAndLongFutures(pair, subClientId, futuresSize, spotSize,positionId);
-        res.status(200).json({message:'Trade closed successfully', status:200});
+        const result = await sellSpotAndLongFutures(pair, subClientId, futuresSize, spotSize, positionId);
+        if (result) {
+            res.status(200).json({message: 'Trade closed successfully', status: 200});
+        } else {
+            res.status(400).json({message: 'Trade closing failed', status: 400});
+        }
     } catch (error) {
         console.error('Error in closing trade:', error.response ? error.response.data : error);
-        res.status(500).json({message:'Error closing trade',status:500});
+        res.status(500).json({message: 'Error closing trade', status: 500});
     }
 });
 
