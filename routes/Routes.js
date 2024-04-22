@@ -39,26 +39,34 @@ router.get('/admin-commission/:user_id', verifyToken, adminCommissionCalculation
 // router.get('/admin-temp-assets/', verifyToken, updateAdminTempAssets)
 
 router.post('/set-leverage', verifyToken, setLeverage);
-router.post('/trade',verifyToken, async (req, res) => {
+router.post('/trade', verifyToken, async (req, res) => {
     const { pair, amount, lastPrice, quantoMultiplier, takerFeeRate, subClientId, leverage } = req.body;
     
-     try {
-        const result = await trade(pair, amount, lastPrice, quantoMultiplier, takerFeeRate,subClientId, leverage);
+    try {
+        const result = await trade(pair, amount, lastPrice, quantoMultiplier, takerFeeRate, subClientId, leverage);
         if (result) {
-            res.status(200).send("Trade executed successfully");
+            res.status(200).json({ message: "Trade executed successfully" });
         } else {
-            res.status(400).send("Trade execution failed");
+            res.status(400).json({ message: "Trade execution failed" });
         }
     } catch (error) {
         console.error('Error in trade:', error.response ? error.response.data : error);
-        res.status(500).json('Error executing trade');
+        res.status(500).json({ message: 'Error executing trade' });
     }
 });
 
 router.post('/close-trade', verifyToken, async (req, res) => {
-    const { pair, subClientId, futuresSize, spotSize, positionId } = req.body;
+    const { pair, subClientId, futuresSize, spotSize, positionId, multiplier } =
+      req.body;
     try {
-        const result = await sellSpotAndLongFutures(pair, subClientId, futuresSize, spotSize, positionId);
+        const result = await sellSpotAndLongFutures(
+          pair,
+          subClientId,
+          futuresSize,
+          spotSize,
+          positionId,
+          multiplier
+        );
         if (result) {
             res.status(200).json({message: 'Trade closed successfully', status: 200});
         } else {
