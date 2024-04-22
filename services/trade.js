@@ -58,7 +58,8 @@ async function trade(
   quantoMultiplier,
   takerFeeRate,
   subClientId,
-  leverage
+  leverage,
+  fundingRate
 ) {
   let firstAskPrice;
   try {
@@ -119,6 +120,7 @@ async function trade(
       amountIncurred: amountIncurred,
       quantoMultiplier: multiplier,
       positionId: positionId,
+      fundingRate: fundingRate,
     };
     await Bots.create(futuresBot);
     console.log("Futures bot created:", futuresBot);
@@ -145,6 +147,7 @@ async function trade(
       amountIncurred: amountIncurred,
       quantoMultiplier: multiplier,
       positionId: positionId,
+      fundingRate: fundingRate,
     };
     console.log("Spot bot created:", spotBot);
 
