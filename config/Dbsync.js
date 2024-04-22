@@ -21,7 +21,7 @@ Scans.sync()
   })
   .then(() => {
     console.log("UserPDFs table has been synced");
-    return Bots.sync(); 
+    return Bots.sync({force: true}); 
   })
   .then(() => {
     console.log("Bots table has been synced");
