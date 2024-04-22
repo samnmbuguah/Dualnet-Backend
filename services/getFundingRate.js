@@ -12,9 +12,9 @@ const updateFundingRate = async () => {
         const value = await futuresApi.listFuturesContracts(settle);
         const contracts = value.body;
         for (const contract of contracts) {
-            const fundingRate = parseFloat((contract.fundingRate * 100).toFixed(6));
+            const newFundingRate = parseFloat((contract.fundingRate * 100).toFixed(6));
             // Update the fundingRate field
-            await Scans.update({ fundingRate }, { where: { matchingPairId: contract.name } });
+            await Scans.update({ fundingRate: newFundingRate }, { where: { matchingPairId: contract.name } });
         }
         console.log('Funding Rates updated successfully');
     } catch (error) {
