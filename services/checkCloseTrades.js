@@ -10,8 +10,7 @@ async function closeShort(
   futuresSize = 0,
   positionId,
   multiplier
-)
-{
+) {
   try {
     const credentials = await getApiCredentials(subClientId);
     if (!credentials) {
@@ -31,8 +30,19 @@ async function closeShort(
 
     return futuresApi
       .createFuturesOrder("usdt", futuresOrder)
-      .then((response) => {
+      .then(async (response) => {
         console.log("Futures close order response", response.body);
+        await Bots.update(
+          {
+            isClose: true,
+            status: "No spot found, closed futures",
+          },
+          {
+            where: {
+              positionId: positionId,
+            },
+          }
+        );
         return true;
       })
       .catch((error) => {
@@ -76,7 +86,10 @@ async function sellSpotPosition(pair, subClientId, spotSize, positionId) {
       .then(async (response) => {
         console.log("Spot sell order response", response.body);
         await Bots.update(
-          { isClose: true },
+          {
+            isClose: true,
+            status: "No futures position found, closing spot",
+          },
           {
             where: {
               positionId: positionId,
