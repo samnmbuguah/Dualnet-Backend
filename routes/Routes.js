@@ -40,10 +40,10 @@ router.get('/admin-commission/:user_id', verifyToken, adminCommissionCalculation
 
 router.post('/set-leverage', verifyToken, setLeverage);
 router.post('/trade', verifyToken, async (req, res) => {
-    const { pair, amount, lastPrice, quantoMultiplier, takerFeeRate, subClientId, leverage } = req.body;
+    const { pair, amount, lastPrice, quantoMultiplier, takerFeeRate, subClientId, leverage, fundingRate } = req.body;
     
     try {
-        const result = await trade(pair, amount, lastPrice, quantoMultiplier, takerFeeRate, subClientId, leverage);
+        const result = await trade(pair, amount, lastPrice, quantoMultiplier, takerFeeRate, subClientId, leverage, fundingRate);
         if (result) {
             res.status(200).json({ message: "Trade executed successfully" });
         } else {
@@ -56,7 +56,7 @@ router.post('/trade', verifyToken, async (req, res) => {
 });
 
 router.post('/close-trade', verifyToken, async (req, res) => {
-    const { pair, subClientId, futuresSize, spotSize, positionId, multiplier } =
+    const { pair, subClientId, futuresSize, spotSize, positionId, multiplier, reason = 'Bot closed by user' } =
       req.body;
     try {
         const result = await sellSpotAndLongFutures(
@@ -65,7 +65,8 @@ router.post('/close-trade', verifyToken, async (req, res) => {
           futuresSize,
           spotSize,
           positionId,
-          multiplier
+          multiplier,
+          reason // Pass the reason here
         );
         if (result) {
             res.status(200).json({message: 'Trade closed successfully', status: 200});
