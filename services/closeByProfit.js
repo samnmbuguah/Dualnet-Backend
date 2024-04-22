@@ -28,6 +28,7 @@ async function closeByProfit(io, bots) {
 
     // Calculate the current value of the spot trade and the futures position
     let currentSpotValue = currentSpotPrice * spotSize;
+    let fundingFee  = bot.fundingRate * bot.futuresSize;
     let unrealisedPNL = Math.round((bot.futuresSize * (bot.futuresEntryPrice - parseFloat(currentFuturesPosition.markPrice))) * 10000) / 10000;
     let currentFuturesValue = bot.futuresValue + unrealisedPNL; ;
 
@@ -57,6 +58,7 @@ async function closeByProfit(io, bots) {
     }
 
     if (percentagePnl > bot.profitThreshold) {
+      const reason = `Profit threshold of ${bot.profitThreshold} reached`;
       await sellSpotAndLongFutures(
         bot.matchingPairId,
         bot.userId,
@@ -64,6 +66,7 @@ async function closeByProfit(io, bots) {
         spotSize,
         bot.positionId,
         bot.quantoMultiplier,
+        reason
       );
     } else {
       botDataForUsers[bot.userId].push(botData);
