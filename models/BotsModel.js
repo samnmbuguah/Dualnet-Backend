@@ -91,7 +91,14 @@ const Bots = db.define('Bots', {
     profitThreshold: {
         type: Sequelize.FLOAT,
         defaultValue: 1.0
-    }
+    }, 
+    fundingRate: {
+        type: Sequelize.FLOAT
+    },
+    accumulatedFunding: {
+        type: Sequelize.FLOAT,
+        defaultValue: 0
+    },
 
 });
 
