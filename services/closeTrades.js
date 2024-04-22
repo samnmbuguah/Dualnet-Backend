@@ -4,15 +4,14 @@ const Bots = require("../models/BotsModel.js");
 const fetchSpotBalance = require("./fetchSpotBalance");
 const getApiCredentials = require("./getApiCredentials");
 
-
-
 async function sellSpotAndLongFutures(
   pair,
   subClientId,
   futuresSize = 0,
   spotSize,
   positionId,
-  multiplier
+  multiplier,
+  reason = "No Reason Provided"
 ) {
   try {
     const credentials = await getApiCredentials(subClientId);
@@ -61,7 +60,9 @@ async function sellSpotAndLongFutures(
           .catch((error) => console.error(error.response));
 
         await Bots.update(
-          { isClose: true },
+          {
+            isClose: true,
+            status : reason},
           {
             where: {
               positionId: positionId,
@@ -82,13 +83,22 @@ async function sellSpotAndLongFutures(
 
 module.exports = sellSpotAndLongFutures;
 
-// const tradeData = {"pair":"POGAI_USDT","subClientId":3,"futuresSize":40000,"spotSize":39986.13154930825,"positionId":"9d86b592-1bad-43e5-93e9-a8b033cc9038","multiplier":10000}
+// const tradeData = {
+//   pair: "POGAI_USDT",
+//   subClientId: 3,
+//   futuresSize: 40000,
+//   spotSize: 39986.13154930825,
+//   positionId: "9d86b592-1bad-43e5-93e9-a8b033cc9038",
+//   multiplier: 10000,
+//   reason: "Your specific reason here"
+// };
 
 // sellSpotAndLongFutures(
 //   tradeData.pair,
 //   tradeData.subClientId,
 //   tradeData.futuresSize,
 //   tradeData.spotSize,
-//   tradeData.positionId
-//   tradeData.multiplier
+//   tradeData.positionId,
+//   tradeData.multiplier,
+//   tradeData.reason
 // );
