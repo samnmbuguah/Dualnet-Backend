@@ -18,7 +18,7 @@ const updateAccumulatedFunding = async () => {
             const fundingRate = scan ? scan.fundingRate : 0;
 
             // Calculate the funding rate fee and add it to the accumulated funding
-            const fundingRateFee = bot.futuresSize * fundingRate;
+            const fundingRateFee = bot.futuresValue * fundingRate/100;
             bot.accumulatedFunding += fundingRateFee;
 
             // Update the bot in the database
@@ -34,6 +34,6 @@ const updateAccumulatedFunding = async () => {
 // // Schedule the function to run every 8 hours from the beginning of the day
 // cron.schedule('0 */8 * * *', updateAccumulatedFunding);
 
-updateAccumulatedFunding();
+// updateAccumulatedFunding();
 
 module.exports = updateAccumulatedFunding;
