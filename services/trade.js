@@ -24,7 +24,7 @@ function createSpotBuyOrder(pair, amount) {
     })
     .catch((error) => {
       console.error(error.response.data);
-      throw error; 
+      throw error;
     });
 }
 
@@ -35,8 +35,8 @@ function createFuturesShortOrder(settle, contract, size) {
   futuresOrder.contract = contract;
   futuresOrder.size = size;
   futuresOrder.price = "0"; // Market order
-  futuresOrder.tif = "ioc"; 
-  futuresOrder.reduce_only = false; 
+  futuresOrder.tif = "ioc";
+  futuresOrder.reduce_only = false;
   futuresOrder.close = false;
 
   return futuresApi
@@ -103,7 +103,7 @@ async function trade(
       spotSize: futuresSize,
       unrealisedPnl: 0,
       realisedPnl: 0,
-      status: futuresResponse.status,
+      status: "Futures Position Opened",
       spotEntryPrice: spotResponse.avgDealPrice,
       futuresEntryPrice: futuresResponse.fillPrice,
       timestamp: new Date(),
@@ -121,6 +121,7 @@ async function trade(
       quantoMultiplier: multiplier,
       positionId: positionId,
       fundingRate: fundingRate,
+      accumulatedFunding: 0,
     };
     await Bots.create(futuresBot);
     console.log("Futures bot created:", futuresBot);
@@ -130,7 +131,7 @@ async function trade(
       spotSize: futuresSize,
       unrealisedPnl: 0,
       realisedPnl: 0,
-      status: spotResponse.status,
+      status: "Spot Position Opened",
       spotEntryPrice: spotResponse.avgDealPrice,
       futuresEntryPrice: futuresResponse.fillPrice,
       timestamp: new Date(),
@@ -148,6 +149,7 @@ async function trade(
       quantoMultiplier: multiplier,
       positionId: positionId,
       fundingRate: fundingRate,
+      accumulatedFunding: 0,
     };
     console.log("Spot bot created:", spotBot);
 
