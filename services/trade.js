@@ -94,6 +94,8 @@ async function trade(
     let takerFee = futuresValue * parseFloat(futuresResponse.tkfr);
     futuresValue = futuresValue + takerFee;
     let amountIncurred = spotAmount + futuresValue;
+    let openingDifference = parseFloat(futuresResponse.fillPrice) - parseFloat(spotResponse.avgDealPrice);
+    let openingPercentageDifference = (openingDifference / parseFloat(spotResponse.avgDealPrice)) * 100;
     let positionId = uuid.v4();
 
     const futuresBot = {
@@ -101,8 +103,6 @@ async function trade(
       matchingPairId: pair,
       futuresSize: futuresSize,
       spotSize: futuresSize,
-      unrealisedPnl: 0,
-      realisedPnl: 0,
       status: "Futures Position Opened",
       spotEntryPrice: spotResponse.avgDealPrice,
       futuresEntryPrice: futuresResponse.fillPrice,
@@ -111,10 +111,8 @@ async function trade(
       tradeType: "short",
       orderId: futuresResponse.id,
       currentPrice: futuresResponse.fillPrice,
-      pNL: 0,
-      cumulativePNL: 0,
       isClose: false,
-      taker: takerFee,
+      takerFee: takerFee,
       spotValue: spotAmount,
       futuresValue: futuresValue,
       amountIncurred: amountIncurred,
@@ -122,6 +120,7 @@ async function trade(
       positionId: positionId,
       fundingRate: fundingRate,
       accumulatedFunding: 0,
+      openingDifference: openingPercentageDifference,
     };
     await Bots.create(futuresBot);
     console.log("Futures bot created:", futuresBot);
@@ -129,8 +128,6 @@ async function trade(
       userId: subClientId,
       matchingPairId: pair,
       spotSize: futuresSize,
-      unrealisedPnl: 0,
-      realisedPnl: 0,
       status: "Spot Position Opened",
       spotEntryPrice: spotResponse.avgDealPrice,
       futuresEntryPrice: futuresResponse.fillPrice,
@@ -139,10 +136,8 @@ async function trade(
       tradeType: "buy",
       orderId: spotResponse.id,
       currentPrice: spotResponse.avgDealPrice,
-      pNL: 0,
-      cumulativePNL: 0,
       isClose: true,
-      taker: spotResponse.gtTakerFee,
+      takerFee: spotResponse.gtTakerFee,
       spotValue: spotAmount,
       futuresValue: futuresValue,
       amountIncurred: amountIncurred,
@@ -150,6 +145,7 @@ async function trade(
       positionId: positionId,
       fundingRate: fundingRate,
       accumulatedFunding: 0,
+      openingDifference: openingPercentageDifference,
     };
     console.log("Spot bot created:", spotBot);
 
