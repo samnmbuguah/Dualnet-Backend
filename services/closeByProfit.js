@@ -28,12 +28,11 @@ async function closeByProfit(io, bots) {
 
     // Calculate the current value of the spot trade and the futures position
     let currentSpotValue = currentSpotPrice * spotSize;
-    let fundingFee  = bot.fundingRate * bot.futuresSize;
     let unrealisedPNL = Math.round((bot.futuresSize * (bot.futuresEntryPrice - parseFloat(currentFuturesPosition.markPrice))) * 10000) / 10000;
-    let currentFuturesValue = bot.futuresValue + unrealisedPNL; ;
+    let currentFuturesValue = bot.futuresValue + unrealisedPNL + bot.accumulatedFunding;
 
     // Calculate the PNL value for the bot
-    const pnlValue = currentSpotValue + currentFuturesValue - bot.amountIncurred;
+    const pnlValue = (currentSpotValue + currentFuturesValue) - bot.amountIncurred;
     const percentagePnl = (pnlValue / bot.amountIncurred) * 100;
 
     // Emit the bot data
@@ -81,3 +80,4 @@ async function closeByProfit(io, bots) {
   }
 }
 module.exports = closeByProfit;
+ 
