@@ -21,7 +21,13 @@ if (!process.env.PORT) {
 // CORS configuration
 console.log("IN",process.env.ENVIRONMENT, "ENVIRONMENT");
 let corsOptions = {
-  origin: ['https://dualnet-production.up.railway.app', 'http://localhost:3042', 'http://localhost:3000', 'http://dualnet.railway.internal'],
+  origin: [
+    "https://dualnet-production.up.railway.app",
+    "http://localhost:3042",
+    "http://localhost:3000",
+    "http://dualnet.railway.internal",
+    "http://172.16.5.4:3000",
+  ],
 };
 
 if (process.env.ENVIRONMENT === 'development') {
@@ -55,13 +61,7 @@ app.use((err, req, res, next) => {
 });
 
 // Create the WebSocket server
-const io = socketIO(server, {
-    cors: {
-        origin: process.env.ENVIRONMENT === 'development' ? '*' : ['https://dualnet-production.up.railway.app', 'http://localhost:3042', 'http://localhost:3000', 'http://dualnet.railway.internal'],
-        methods: ["GET", "POST"],
-        credentials: true
-    }
-});
+const io = socketIO(server, { cors: corsOptions });
 
 io.on('connection', (socket) => {
     // When a client connects, they should emit a 'join' event with their userId
