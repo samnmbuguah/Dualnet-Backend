@@ -22,10 +22,12 @@ const Bots = db.define('Bots', {
         type: Sequelize.FLOAT
     },
     unrealisedPnl: {
-        type: Sequelize.FLOAT
+        type: Sequelize.FLOAT,
+        defaultValue: 0
     },
     realisedPnl: {
-        type: Sequelize.FLOAT
+        type: Sequelize.FLOAT,
+        defaultValue: 0
     },
     status: {
         type: Sequelize.STRING
@@ -34,6 +36,18 @@ const Bots = db.define('Bots', {
         type: Sequelize.FLOAT
     },
     futuresEntryPrice: {
+        type: Sequelize.FLOAT
+    },
+    openingDifference: {
+        type: Sequelize.FLOAT
+    },
+    currentDifference: {
+        type: Sequelize.FLOAT
+    },
+    currentSpotPrice: {
+        type: Sequelize.FLOAT
+    },
+    currentFuturesPrice: {
         type: Sequelize.FLOAT
     },
     exitPrice: {
@@ -54,11 +68,13 @@ const Bots = db.define('Bots', {
     currentPrice: {
         type: Sequelize.FLOAT
     },
-    pNL: {
-        type: Sequelize.FLOAT
+    pnlPercent: {
+        type: Sequelize.FLOAT,
+        defaultValue: 0
     },
     cumulativePNL: {
-        type: Sequelize.FLOAT
+        type: Sequelize.FLOAT,
+        defaultValue: 0
     }, 
     isLiq: {
         type: Sequelize.BOOLEAN
@@ -70,7 +86,7 @@ const Bots = db.define('Bots', {
         type: Sequelize.STRING,
         defaultValue: 'usdt'
     },
-    taker: {
+    takerFee: {
         type: Sequelize.STRING
     },
     spotValue: {
@@ -99,7 +115,9 @@ const Bots = db.define('Bots', {
         type: Sequelize.FLOAT,
         defaultValue: 0
     },
-
+    adl: {
+        type: Sequelize.FLOAT
+    }
 });
 
 module.exports = Bots;
