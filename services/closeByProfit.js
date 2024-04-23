@@ -35,6 +35,8 @@ async function closeByProfit(io, bots) {
     const pnlValue = (currentSpotValue + currentFuturesValue) - bot.amountIncurred;
     const percentagePnl = (pnlValue / bot.amountIncurred) * 100;
 
+    let currentDifference = ((parseFloat(currentFuturesPosition.markPrice) - currentSpotPrice) / currentSpotPrice) * 100;
+
     // Emit the bot data
     let botData = {
       matchingPairId: bot.matchingPairId,
@@ -49,6 +51,13 @@ async function closeByProfit(io, bots) {
       positionId: bot.positionId,
       createdAt: bot.createdAt,
       quantoMultiplier: bot.quantoMultiplier,
+      currentSpotPrice: currentSpotPrice,
+      currentFuturesPrice: parseFloat(currentFuturesPosition.markPrice),
+      openingDifference: bot.openingDifference,
+      currentDifference: currentDifference,
+      pnlPercent: percentagePnl,
+      unrealisedPnl: pnlValue,
+      adl: currentFuturesPosition.adlRanking,
     };
 
     // Add botData to the array for this user
@@ -68,6 +77,16 @@ async function closeByProfit(io, bots) {
         reason
       );
     } else {
+      // Update the bot in the database
+      await bot.update({
+        currentSpotPrice: currentSpotPrice,
+        currentFuturesPrice: parseFloat(currentFuturesPosition.markPrice),
+        currentDifference: currentDifference,
+        pnlPercent: percentagePnl,
+        unrealisedPnl: pnlValue,
+        adl: currentFuturesPosition.adlRanking,
+      });
+
       botDataForUsers[bot.userId].push(botData);
     }
   }
