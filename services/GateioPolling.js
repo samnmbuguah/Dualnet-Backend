@@ -1,6 +1,7 @@
 const Scans = require("../models/ScansModel.js");
 const getContractDetails = require("./getContractDetails.js");
 const getCurrentSpotPrice = require("./getCurrentSpotPrice");
+const listFuturesOrderBook = require("./listFuturesOrderBook.js");
 
 // Helper function to handle rate limitting
 function delay(ms) {
@@ -30,16 +31,16 @@ class PollPrices {
 
       try {
         const spotResponse = await getCurrentSpotPrice(ticker);
-        const futuresResponse = await getContractDetails(this.settle, ticker);
+        const futuresResponse = await listFuturesOrderBook(this.settle, ticker);
 
-        const spotPrice = parseFloat(spotResponse.last);
-        const futuresPrice = parseFloat(futuresResponse.lastPrice);
+        const spotPrice = parseFloat(spotResponse.lowestAsk);
+        const futuresPrice = parseFloat(futuresResponse.p);
 
-        let valueDifference = (futuresPrice - spotPrice).toFixed(
-          this.amountPrecisions[index] + 2
-        );
+        let valueDifference = futuresPrice - spotPrice;
+        valueDifference = Math.round(valueDifference * Math.pow(10, this.amountPrecisions[index] + 2)) / Math.pow(10, this.amountPrecisions[index] + 2);
+
         let percentageDifference = (valueDifference / spotPrice) * 100;
-        percentageDifference = parseFloat(percentageDifference.toFixed(4));
+        percentageDifference = Math.round(percentageDifference * 10000) / 10000;
 
         await Scans.upsert({
           matchingPairId: ticker,
