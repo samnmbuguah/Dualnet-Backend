@@ -1,6 +1,9 @@
 const GateApi = require('gate-api');
 const client = new GateApi.ApiClient();
 const Scans = require('../models/ScansModel.js');
+const Bots = require('../models/BotsModel.js');
+const sellSpotAndLongFutures = require('./closeTrades.js');
+const fetchSpotBalance = require("./fetchSpotBalance");
 const cron = require('node-cron');
 const settle = "usdt";
 
@@ -17,6 +20,38 @@ const updateFundingRate = async () => {
             await Scans.update({ fundingRate: newFundingRate }, { where: { matchingPairId: contract.name } });
         }
         console.log('Funding Rates updated successfully');
+        
+        // Fetch all open bots
+        // const openBots = await Bots.findAll({ where: { isClose: false } });
+
+        // for (const bot of openBots) {
+        //     // Fetch the funding rate for the bot's matching pair ID
+        //     const scan = await Scans.findOne({
+        //     where: { matchingPairId: bot.matchingPairId },
+        //     });
+
+        //     // If the funding rate is less than 0, call sellSpotAndLongFutures with the correct parameters
+        //     if (scan && scan.fundingRate < 0) {
+        //         const spotBalance = await fetchSpotBalance(
+        //             bot.matchingPairId,
+        //             bot.userId
+        //         );
+        //         let availableSpotBalance = parseFloat(spotBalance.available);
+        //         const spotSize = Math.min(
+        //             Number(availableSpotBalance),
+        //             Number(bot.spotSize)
+        //         );
+        //         await sellSpotAndLongFutures(
+        //         bot.matchingPairId, // pair
+        //         bot.userId, // subClientId
+        //         bot.futuresSize || 0, // futuresSize
+        //         spotSize, // spotSize
+        //         bot.positionId, // positionId
+        //         bot.quantoMultiplier, // multiplier
+        //         "Negative funding rate" // reason
+        //         );
+        //     }
+        // }
     } catch (error) {
         console.error(`Failed to update funding rates: ${error}`);
     }
