@@ -7,7 +7,7 @@ const getApiCredentials = require("./getApiCredentials");
 async function closeShort(
   pair,
   subClientId,
-  futuresSize = 0,
+  futuresSize,
   positionId,
   multiplier
 ) {
@@ -21,6 +21,7 @@ async function closeShort(
 
     const futuresApi = new GateApi.FuturesApi(client);
     const amount = futuresSize / multiplier;
+    
     const futuresOrder = new GateApi.FuturesOrder();
     futuresOrder.contract = pair;
     futuresOrder.settle = "usdt";
