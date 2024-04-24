@@ -70,17 +70,9 @@ async function sellSpotPosition(pair, subClientId, spotSize, positionId) {
     order.account = "spot";
     order.type = "market";
     order.currencyPair = pair;
-    order.amount = parseFloat(spotSize.available);
+    order.amount = spotSize;
     order.side = "sell";
     order.timeInForce = "ioc";
-
-    const baseCurrency = pair.split("_")[0];
-    const spotBalance = await fetchSpotBalance(baseCurrency, subClientId);
-    const availableSpotBalance = Number(spotBalance.available);
-
-    if (availableSpotBalance <= spotSize) {
-      order.amount = availableSpotBalance;
-    }
 
     return spotApi
       .createOrder(order)
