@@ -1,5 +1,7 @@
 const GateApi = require("gate-api");
 const client = new GateApi.ApiClient();
+const { closeShort, sellSpotPosition } = require("./checkCloseTrades");
+const fetchSpotBalance = require("./fetchSpotBalance");
 const getCurrentSpotPrice = require("./getCurrentSpotPrice");
 const getApiCredentials = require("./getApiCredentials");
 const Bots = require("../models/BotsModel.js");
@@ -47,7 +49,6 @@ function createFuturesShortOrder(settle, contract, size) {
     })
     .catch((error) => {
       console.error(error.response);
-      throw error;
     });
 }
 
@@ -62,6 +63,7 @@ async function trade(
   fundingRate
 ) {
   let firstAskPrice;
+  let positionId = uuid.v4();
   try {
     const credentials = await getApiCredentials(subClientId);
     if (!credentials) {
@@ -85,7 +87,40 @@ async function trade(
     size = size * -1;
 
     const spotResponse = await createSpotBuyOrder(pair, spotAmount);
+    if (!spotResponse) {
+      throw new Error("Spot buy order creation failed.");
+    }
+
     const futuresResponse = await createFuturesShortOrder("usdt", pair, size);
+    if (!futuresResponse) {
+      console.log(
+        "Futures short order creation failed. Selling spot position..."
+      );
+      let spotBalance = await fetchSpotBalance(pair, subClientId);
+      spotBalance = parseFloat(spotBalance.available);
+      let intendedSpotSize = -size * quantoMultiplier;
+      let spotBalancePercentageDifference = Math.abs(
+        (spotBalance - intendedSpotSize) / intendedSpotSize
+      );
+
+      if (spotBalancePercentageDifference <= 0.02) {
+        await sellSpotPosition(
+          pair,
+          subClientId,
+          spotBalance.toString(),
+          positionId
+        );
+      } else if (spotBalance > intendedSpotSize) {
+        await sellSpotPosition(
+          pair,
+          subClientId,
+          intendedSpotSize.toString(),
+          positionId
+        );
+      }
+
+      throw new Error("Futures short order creation failed sold spot");
+    }
 
     let fillPrice = parseFloat(futuresResponse.fillPrice);
     let multiplier = parseFloat(quantoMultiplier);
@@ -94,9 +129,11 @@ async function trade(
     let takerFee = futuresValue * parseFloat(futuresResponse.tkfr);
     futuresValue = futuresValue + takerFee;
     let amountIncurred = spotAmount + futuresValue;
-    let openingDifference = parseFloat(futuresResponse.fillPrice) - parseFloat(spotResponse.avgDealPrice);
-    let openingPercentageDifference = (openingDifference / parseFloat(spotResponse.avgDealPrice)) * 100;
-    let positionId = uuid.v4();
+    let openingDifference =
+      parseFloat(futuresResponse.fillPrice) -
+      parseFloat(spotResponse.avgDealPrice);
+    let openingPercentageDifference =
+      (openingDifference / parseFloat(spotResponse.avgDealPrice)) * 100;
 
     const futuresBot = {
       userId: subClientId,
