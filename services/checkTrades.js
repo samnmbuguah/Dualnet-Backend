@@ -26,7 +26,8 @@ async function checkTrades() {
     console.log("Bots fetched successfully", bots.length);
 
     for (const bot of bots) {
-      const balance = await fetchSpotBalance(bot.matchingPairId, bot.userId);
+      let balance = await fetchSpotBalance(bot.matchingPairId, bot.userId);
+      balance =balance.available;
       const balanceInUsdt = balance.available * bot.currentPrice;
       const position = await fetchPosition(
         bot.settle,
