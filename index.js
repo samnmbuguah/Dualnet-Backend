@@ -107,4 +107,4 @@ cron.schedule('* * * * *', async () => {
 cron.schedule('0 0 * * *', populateTables);
 cron.schedule('0 */8 * * *', updateAccumulatedFunding);
 cron.schedule('*/10 * * * *', updateFundingRate);
-setInterval(checkTrades, 1000);
+checkTrades();

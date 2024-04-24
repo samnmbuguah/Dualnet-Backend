@@ -1,52 +1,75 @@
-const fetchSpotBalance = require('./fetchSpotBalance');
-const fetchPosition = require('./getPosition');
-const Bots = require('../models/BotsModel.js');
-const cron = require('node-cron');
-const { closeShort, sellSpotPosition } = require('./checkCloseTrades');
-const Sequelize = require('sequelize');
+const fetchSpotBalance = require("./fetchSpotBalance");
+const fetchPosition = require("./getPosition");
+const Bots = require("../models/BotsModel.js");
+const cron = require("node-cron");
+const { closeShort, sellSpotPosition } = require("./checkCloseTrades");
+const Sequelize = require("sequelize");
 const Op = Sequelize.Op;
 
 // Function to check trades
 async function checkTrades() {
   try {
-    console.log('checkTrades function called');
-    const bots = await Bots.findAll({ 
-      attributes: ["userId", "matchingPairId", "currentPrice", "settle", "isClose", "positionId", "quantoMultiplier"],
-      where: { isClose: false } 
+    console.log("checkTrades function called");
+    const bots = await Bots.findAll({
+      attributes: [
+        "userId",
+        "matchingPairId",
+        "currentPrice",
+        "settle",
+        "isClose",
+        "positionId",
+        "quantoMultiplier",
+        "futuresSize",
+      ],
+      where: { isClose: false },
     });
-    console.log('Bots fetched successfully', bots.length);
+    console.log("Bots fetched successfully", bots.length);
 
     for (const bot of bots) {
       const balance = await fetchSpotBalance(bot.matchingPairId, bot.userId);
       const balanceInUsdt = balance.available * bot.currentPrice;
-      const position = await fetchPosition(bot.settle, bot.matchingPairId, bot.userId);
+      const position = await fetchPosition(
+        bot.settle,
+        bot.matchingPairId,
+        bot.userId
+      );
       const positionSize = position ? position.size : 0; // Handle undefined position
-
+      const botSize = bot.futuresSize;
       if (positionSize < 0 && balanceInUsdt < 1) {
-        console.log('Closing short');
+        console.log("Closing short");
         try {
-          await closeShort(bot.matchingPairId, bot.userId, positionSize, bot.positionId, bot.quantoMultiplier);
-          console.log('Short closed successfully');
+          await closeShort(
+            bot.matchingPairId,
+            bot.userId,
+            bot.futuresSize,
+            bot.positionId,
+            bot.quantoMultiplier
+          );
+          console.log("Short closed successfully");
         } catch (error) {
-          console.error('Error during closing short:', error);
+          console.error("Error during closing short:", error);
         }
       }
 
       if (balanceInUsdt > 1 && positionSize == 0) {
-        console.log('Selling spot');
+        console.log("Selling spot");
         try {
-          await sellSpotPosition(bot.matchingPairId, bot.userId, balance, bot.positionId);
-          console.log('Spot sold successfully');
-          await Bots.update({ isClose: true }, { where: { matchingPairId: bot.matchingPairId, userId: bot.userId } });
-          console.log('Bots updated successfully');
+          await sellSpotPosition(
+            bot.matchingPairId,
+            bot.userId,
+            balance,
+            bot.positionId
+          );
+          console.log("Spot sold successfully");
         } catch (error) {
-          console.error('Error during selling spot:', error);
+          console.error("Error during selling spot:", error);
         }
       }
     }
   } catch (error) {
-    console.error('Error in cron job:', error);
+    console.error("Error in cron job:", error);
   }
+  setTimeout(checkTrades, 1000);
 }
 
 module.exports = checkTrades;
