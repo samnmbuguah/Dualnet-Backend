@@ -10,31 +10,31 @@ const maxRetries = 5;
 const retryDelay = 300000;
 
 async function fetchTopScans() {
-    console.log("Fetching top scans...")
-    const topScans = await Scans.findAll({
-        where: {
-        percentageDifference: {
-            [Op.gt]: 0, // greater than 0
-        },
-        fundingRate: {
-            [Op.gte]: 0.01,
-        },
-        updatedAt: {
-            [Op.gte]: moment().subtract(10, "minutes").toDate(), // updated within the last minutes
-        },
-        },
-        order: [["percentageDifference", "DESC"]], // sorts by percentageDifference
-        limit: 10,
-    });
-    console.log("Top scans fetched successfully")
-    return topScans;
+  console.log("Fetching top scans...");
+  const topScans = await Scans.findAll({
+    where: {
+      percentageDifference: {
+        [Op.gt]: 0, // greater than 0
+      },
+      fundingRate: {
+        [Op.gte]: 0.01,
+      },
+      updatedAt: {
+        [Op.gte]: moment().subtract(10, "minutes").toDate(), // updated within the last minutes
+      },
+    },
+    order: [["percentageDifference", "DESC"]], // sorts by percentageDifference
+    limit: 10,
+  });
+  console.log("Top scans fetched successfully");
+  return topScans;
 }
 
 async function fetchAndLogPrices(pollPrices, io) {
   updateResult = await pollPrices.fetchAndUpdateScans();
 
   // If fetchAndUpdateScans was successful, fetch top scans from the database
-  if (updateResult) {    
+  if (updateResult) {
     // Emit top scans to the client
     const topScans = await fetchTopScans();
     io.emit("topScans", topScans);
@@ -44,13 +44,12 @@ async function fetchAndLogPrices(pollPrices, io) {
   }
 }
 
-
 async function updateTickersAndPrecisions(pollPrices) {
   const records = await MatchingPairs.findAll({
     attributes: ["id", "precision", "fundingRate"],
     where: { fundingRate: { [Op.gte]: 0.01 } },
     order: [["fundingRate", "DESC"]],
-    limit:500,
+    limit: 500,
   });
 
   if (!records || records.length === 0) {
