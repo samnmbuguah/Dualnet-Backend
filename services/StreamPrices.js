@@ -39,8 +39,8 @@ async function fetchAndLogPrices(pollPrices, io) {
     const topScans = await fetchTopScans();
     io.emit("topScans", topScans);
 
-    // Recursively call fetchAndLogPrices every 60 seconds
-    setTimeout(() => fetchAndLogPrices(pollPrices, io), 60000);
+    // Recursively call every 10 seconds
+    setTimeout(() => fetchAndLogPrices(pollPrices, io), 10000);
   }
 }
 
@@ -77,7 +77,6 @@ async function StreamPrices(io, retryCount = 0) {
     });
 
     fetchAndLogPrices(pollPrices, io);
-    // setInterval(() => fetchAndLogPrices(pollPrices, io), 300000);
 
     // Update tickers and precisions every 5 minutes
     setInterval(() => updateTickersAndPrecisions(pollPrices), 400000);
@@ -90,7 +89,6 @@ async function StreamPrices(io, retryCount = 0) {
 
         // Emit top scans to the client
         socket.emit("topScans", topScans);
-        fetchAndLogPrices(pollPrices, io);
       });
 
       socket.on("error", (error) => {
