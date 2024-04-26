@@ -22,7 +22,7 @@ class PollPrices {
   }
 
   async fetchAndUpdateScans() {
-    const delayInMilliseconds = 10000 / 200; // 50 milliseconds
+    const delayInMilliseconds = 100;
 
     for (let index = 0; index < this.tickers.length; index++) {
       const ticker = this.tickers[index];
