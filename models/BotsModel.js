@@ -117,7 +117,11 @@ const Bots = db.define('Bots', {
     },
     adl: {
         type: Sequelize.FLOAT
-    }
+    },
+    highestProfit: {
+        type: Sequelize.FLOAT,
+        defaultValue: 0
+    },
 });
 
 module.exports = Bots;
