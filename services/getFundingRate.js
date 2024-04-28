@@ -16,10 +16,16 @@ const updateFundingRate = async () => {
         const contracts = value.body;
         for (const contract of contracts) {
             const newFundingRate = parseFloat((contract.fundingRate * 100).toFixed(6));
-            // Update the fundingRate field
-            await Scans.update({ fundingRate: newFundingRate }, { where: { matchingPairId: contract.name } });
+            const fundingNextApply = contract.fundingNextApply;
+            // Update the fundingRate and fundingNextApply fields
+            await Scans.update({ fundingRate: newFundingRate, fundingNextApply: fundingNextApply }, { where: { matchingPairId: contract.name } });
         }
         console.log('Funding Rates updated successfully');
+        
+        // Fetch all open bots
+        // const openBots = await Bots.findAll({ where: { isClose: false } });
+
+        // for (const bot of openBots) {
         
         // Fetch all open bots
         // const openBots = await Bots.findAll({ where: { isClose: false } });
