@@ -60,7 +60,8 @@ async function trade(
   takerFeeRate,
   subClientId,
   leverage,
-  fundingRate
+  fundingRate,
+  closeByProfit,
 ) {
   let firstAskPrice;
   let positionId = uuid.v4();
@@ -158,6 +159,7 @@ async function trade(
       fundingRate: fundingRate,
       accumulatedFunding: 0,
       openingDifference: openingPercentageDifference,
+      profitThreshold: closeByProfit,
     };
     await Bots.create(futuresBot);
     console.log("Futures bot created:", futuresBot);
@@ -183,6 +185,7 @@ async function trade(
       fundingRate: fundingRate,
       accumulatedFunding: 0,
       openingDifference: openingPercentageDifference,
+      profitThreshold: closeByProfit,
     };
     console.log("Spot bot created:", spotBot);
 

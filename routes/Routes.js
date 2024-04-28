@@ -40,10 +40,30 @@ router.get('/admin-commission/:user_id', verifyToken, adminCommissionCalculation
 
 router.post('/set-leverage', verifyToken, setLeverage);
 router.post('/trade', verifyToken, async (req, res) => {
-    const { pair, amount, lastPrice, quantoMultiplier, takerFeeRate, subClientId, leverage, fundingRate } = req.body;
+    const {
+      pair,
+      amount,
+      lastPrice,
+      quantoMultiplier,
+      takerFeeRate,
+      subClientId,
+      leverage,
+      fundingRate,
+      closeByProfit,
+    } = req.body;
     
     try {
-        const result = await trade(pair, amount, lastPrice, quantoMultiplier, takerFeeRate, subClientId, leverage, fundingRate);
+        const result = await trade(
+          pair,
+          amount,
+          lastPrice,
+          quantoMultiplier,
+          takerFeeRate,
+          subClientId,
+          leverage,
+          fundingRate,
+          closeByProfit
+        );
         if (result) {
             res.status(200).json({ message: "Trade executed successfully" });
         } else {
@@ -104,7 +124,7 @@ router.put('/updateProfitThreshold', async (req, res) => {
     }
 
     try {
-        await Bots.update({ profitThreshold }, { where: {} });
+        await Bots.update({ profitThreshold }, { where: { isClose: false } });
         res.send({ message: 'Updated successfully'});
     } catch (error) {
         console.error('Error updating profitThreshold:', error);
