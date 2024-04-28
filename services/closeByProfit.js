@@ -34,7 +34,7 @@ async function closeByProfit(io, bots) {
     // Calculate the PNL value for the bot
     const pnlValue = (currentSpotValue + currentFuturesValue) - bot.amountIncurred;
     const percentagePnl = (pnlValue / bot.amountIncurred) * 100;
-
+    const highestProfit = percentagePnl > bot.highestProfit ? percentagePnl : bot.highestProfit;
     let currentDifference = ((parseFloat(currentFuturesPosition.markPrice) - currentSpotPrice) / currentSpotPrice) * 100;
 
     // Emit the bot data
@@ -58,6 +58,10 @@ async function closeByProfit(io, bots) {
       pnlPercent: percentagePnl,
       unrealisedPnl: pnlValue,
       adl: currentFuturesPosition.adlRanking,
+      highestProfit: highestProfit,
+      closeByProfit: bot.profitThreshold,
+      spotEntryPrice: bot.spotEntryPrice,
+      futuresEntryPrice: bot.futuresEntryPrice,
     };
 
     // Add botData to the array for this user
@@ -85,6 +89,7 @@ async function closeByProfit(io, bots) {
         pnlPercent: percentagePnl,
         unrealisedPnl: pnlValue,
         adl: currentFuturesPosition.adlRanking,
+        highestProfit: highestProfit,
       });
 
       botDataForUsers[bot.userId].push(botData);
