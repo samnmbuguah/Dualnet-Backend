@@ -21,11 +21,11 @@ socket.on("topScans", (data) => {
     const currentTimestamp = Date.now();
     if (lastNonEmptyTopScansTimestamp) {
       const timeDifference = (currentTimestamp - lastNonEmptyTopScansTimestamp)/60000;
-      console.log(`Time since last non-empty topScans: ${timeDifference} Minutes`);
+      // console.log(`Time since last non-empty topScans: ${timeDifference} Minutes`);
     }
     lastNonEmptyTopScansTimestamp = currentTimestamp;
   }
-  console.log("Received topScans from the server:", data[0]);
+  // console.log("Received topScans from the server:", data[0]);
 });
 
 // Listen for the 'botData' event to receive the bot data from the server
