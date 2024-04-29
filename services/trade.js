@@ -25,7 +25,7 @@ function createSpotBuyOrder(pair, amount) {
       return response.body;
     })
     .catch((error) => {
-      console.error(error.response.data);
+      console.error(error.response);
       throw error;
     });
 }
@@ -82,7 +82,7 @@ async function trade(
   try {
     let size = Math.floor(amount / (lastPrice * parseFloat(quantoMultiplier)));
     let spotAmount = size * quantoMultiplier * firstAskPrice;
-    spotAmount = spotAmount + spotAmount * takerFeeRate;
+    spotAmount = spotAmount + (spotAmount * takerFeeRate);
     console.log("Spot amount:", spotAmount);
     console.log("Size:", size);
     size = size * -1;
@@ -130,11 +130,8 @@ async function trade(
     let takerFee = futuresValue * parseFloat(futuresResponse.tkfr);
     futuresValue = futuresValue + takerFee;
     let amountIncurred = spotAmount + futuresValue;
-    let openingDifference =
-      parseFloat(futuresResponse.fillPrice) -
-      parseFloat(spotResponse.avgDealPrice);
-    let openingPercentageDifference =
-      (openingDifference / parseFloat(spotResponse.avgDealPrice)) * 100;
+    let openingDifference = parseFloat(futuresResponse.fillPrice) - parseFloat(spotResponse.avgDealPrice);
+    let openingPercentageDifference = (openingDifference / parseFloat(spotResponse.avgDealPrice)) * 100;
 
     const futuresBot = {
       userId: subClientId,
