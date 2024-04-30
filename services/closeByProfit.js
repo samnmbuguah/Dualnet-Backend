@@ -44,7 +44,6 @@ async function closeByProfit(io, bots) {
       amountIncurred: bot.amountIncurred,
       pnlValue: pnlValue,
       percentagePnl: percentagePnl,
-      liqPrice: currentFuturesPosition.liqPrice,
       profitThreshold: bot.profitThreshold,
       futuresSize: bot.futuresSize,
       spotSize: spotSize,
