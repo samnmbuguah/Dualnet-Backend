@@ -7,13 +7,14 @@ let lastNonEmptyTopScansTimestamp = null;
 socket.on("connect", () => {
   console.log("Connected to the server");
   socket.emit("join", 3);
-  // Emit the 'updateScans' event every 30 seconds
-//   setInterval(() => {
-//     console.log("Sending updateScans event to the server");
-//     socket.emit("updateScans");
-//   }, 600000); // 30000 milliseconds = 30 seconds
+  // Emit the 'updateScans' event every 10 minutes
+  setInterval(() => {
+    console.log("Sending updateScans event to the server");
+    const criteria = "percentageDifference"; // replace with your criteria
+    const order = "desc"; // replace with your order
+    socket.emit("updateScans", { criteria: "percentageDifference", order: "desc" });
+  }, 600000); // 600000 milliseconds = 10 minutes
 });
-
 
 // Listen for the 'topScans' event to receive the top scans from the server
 socket.on("topScans", (data) => {
