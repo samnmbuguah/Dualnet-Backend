@@ -34,7 +34,7 @@ class PollPrices {
         const futuresResponse = await listFuturesOrderBook(this.settle, ticker);
 
         const spotPrice = parseFloat(spotResponse.lowestAsk);
-        const futuresPrice = parseFloat(futuresResponse.p);
+        const futuresPrice = parseFloat(futuresResponse.bids[0].p);
 
         let valueDifference = futuresPrice - spotPrice;
         valueDifference = Math.round(valueDifference * Math.pow(10, this.amountPrecisions[index] + 2)) / Math.pow(10, this.amountPrecisions[index] + 2);

@@ -3,6 +3,7 @@ const fetchPosition = require("./getPosition");
 const fetchSpotBalance = require("./fetchSpotBalance");
 const Bots = require("../models/BotsModel.js");
 const getCurrentSpotPrice = require("./getCurrentSpotPrice");
+const listFuturesOrderBook = require("./listFuturesOrderBook.js");
 const cron = require("node-cron");
 
 async function closeByProfit(io, bots) {
@@ -16,6 +17,8 @@ async function closeByProfit(io, bots) {
       bot.matchingPairId,
       bot.userId
     );
+    const futuresResponse = await listFuturesOrderBook(bot.settle, bot.matchingPairId);
+    const futuresPrice = parseFloat(futuresResponse.asks[0].p);
     const spotBalance = await fetchSpotBalance(bot.matchingPairId, bot.userId);
     let availableSpotBalance = parseFloat(spotBalance.available);
 
@@ -28,14 +31,14 @@ async function closeByProfit(io, bots) {
 
     // Calculate the current value of the spot trade and the futures position
     let currentSpotValue = currentSpotPrice * spotSize;
-    let unrealisedPNL = Math.round((bot.futuresSize * (bot.futuresEntryPrice - parseFloat(currentFuturesPosition.markPrice))) * 10000) / 10000;
+    let unrealisedPNL = Math.round((bot.futuresSize * (bot.futuresEntryPrice - futuresPrice)) * 10000) / 10000;
     let currentFuturesValue = bot.futuresValue + unrealisedPNL + bot.accumulatedFunding;
 
     // Calculate the PNL value for the bot
     const pnlValue = (currentSpotValue + currentFuturesValue) - bot.amountIncurred;
     const percentagePnl = (pnlValue / bot.amountIncurred) * 100;
     const highestProfit = percentagePnl > bot.highestProfit ? percentagePnl : bot.highestProfit;
-    let currentDifference = ((parseFloat(currentFuturesPosition.markPrice) - currentSpotPrice) / currentSpotPrice) * 100;
+    let currentDifference = ((futuresPrice - currentSpotPrice) / currentSpotPrice) * 100;
 
     // Emit the bot data
     let botData = {
@@ -51,7 +54,7 @@ async function closeByProfit(io, bots) {
       createdAt: bot.createdAt,
       quantoMultiplier: bot.quantoMultiplier,
       currentSpotPrice: currentSpotPrice,
-      currentFuturesPrice: parseFloat(currentFuturesPosition.markPrice),
+      currentFuturesPrice: futuresPrice,
       openingDifference: bot.openingDifference,
       currentDifference: currentDifference,
       pnlPercent: percentagePnl,
@@ -83,7 +86,7 @@ async function closeByProfit(io, bots) {
       // Update the bot in the database
       await bot.update({
         currentSpotPrice: currentSpotPrice,
-        currentFuturesPrice: parseFloat(currentFuturesPosition.markPrice),
+        currentFuturesPrice: futuresPrice,
         currentDifference: currentDifference,
         pnlPercent: percentagePnl,
         unrealisedPnl: pnlValue,
