@@ -9,21 +9,18 @@ let tickers, amountPrecisions, fundingRates;
 const maxRetries = 5;
 const retryDelay = 300000;
 
-async function fetchTopScans() {
+async function fetchTopScans(
+  criteria = "percentageDifference",
+  order = "DESC"
+) {
   console.log("Fetching top scans...");
   const topScans = await Scans.findAll({
     where: {
-      percentageDifference: {
-        [Op.gt]: 0, // greater than 0
-      },
-      fundingRate: {
-        [Op.gte]: 0.01,
-      },
       updatedAt: {
         [Op.gte]: moment().subtract(10, "minutes").toDate(), // updated within the last minutes
       },
     },
-    order: [["percentageDifference", "DESC"]], // sorts by percentageDifference
+    order: [[criteria, order]], // sorts by the given criteria
     limit: 10,
   });
   console.log("Top scans fetched successfully");
@@ -35,9 +32,9 @@ async function fetchAndLogPrices(pollPrices, io) {
 
   // If fetchAndUpdateScans was successful, fetch top scans from the database
   if (updateResult) {
-    // Emit top scans to the client
-    const topScans = await fetchTopScans();
-    io.emit("topScans", topScans);
+    // // Emit top scans to the client
+    // const topScans = await fetchTopScans();
+    // io.emit("topScans", topScans);
 
     // Recursively call every 10 seconds
     setTimeout(() => fetchAndLogPrices(pollPrices, io), 10000);
@@ -83,13 +80,13 @@ async function StreamPrices(io, retryCount = 0) {
 
     // Listen for the 'updateScans' event from the client and handle it
     io.on("connection", (socket) => {
-      socket.on("updateScans", async () => {
-        // Fetch top scans from the database
-        const topScans = await fetchTopScans();
+      socket.on("updateScans", async ({ criteria, order }) => {
+        // Fetch top scans from the database with the given criteria and order
+        const topScans = await fetchTopScans(criteria, order);
 
         // Emit top scans to the client
         socket.emit("topScans", topScans);
-      });
+      }); 
 
       socket.on("error", (error) => {
         console.error("Socket error:", error);
