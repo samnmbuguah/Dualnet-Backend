@@ -122,6 +122,10 @@ const Bots = db.define('Bots', {
         type: Sequelize.FLOAT,
         defaultValue: 0
     },
+    closeByDeviation: {
+        type: Sequelize.FLOAT,
+        defaultValue: 3.0
+    }
 });
 
 module.exports = Bots;
