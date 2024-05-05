@@ -50,6 +50,7 @@ router.post('/trade', verifyToken, async (req, res) => {
       leverage,
       fundingRate,
       closeByProfit,
+      closeByDeviation,
     } = req.body;
     
     try {
@@ -62,7 +63,8 @@ router.post('/trade', verifyToken, async (req, res) => {
           subClientId,
           leverage,
           fundingRate,
-          closeByProfit
+          closeByProfit,
+          closeByDeviation
         );
         if (result) {
             res.status(200).json({ message: "Trade executed successfully" });
