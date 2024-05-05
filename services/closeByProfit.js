@@ -71,8 +71,8 @@ async function closeByProfit(io, bots) {
       botDataForUsers[bot.userId] = [];
     }
 
-    if (percentagePnl > bot.profitThreshold) {
-      const reason = `Profit threshold of ${bot.profitThreshold} reached`;
+    if (percentagePnl > bot.profitThreshold || currentDifference > bot.closeByDeviation) {
+      const reason = `Profit threshold of ${bot.profitThreshold} reached or deviation of ${bot.closeByDeviation} reached.`;
       await sellSpotAndLongFutures(
         bot.matchingPairId,
         bot.userId,
