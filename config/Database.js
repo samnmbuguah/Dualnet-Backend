@@ -5,11 +5,11 @@ dotenv.config();
 let db;
 try {
     if (process.env.ENVIRONMENT === 'production') {
-        db = new Sequelize('railway', 'postgres', 'VFwQxOHkqOHYTsGCGjifjqJGOGlCWPZU', {
-            host: 'viaduct.proxy.rlwy.net',
+        db = new Sequelize(process.env.PROD_DB_NAME, process.env.PROD_DB_USER, process.env.PROD_DB_PASSWORD, {
+            host: process.env.PROD_DB_HOST,
             dialect: 'postgres',
             logging: false,
-            port: 16646,
+            port: process.env.PROD_DB_PORT,
             pool: {
                 max: 5,
                 min: 0,
@@ -23,11 +23,11 @@ try {
             }
         });
     } else if (process.env.ENVIRONMENT === 'development') {
-        db = new Sequelize('dualnetdb', 'dualnetadmin', 'password', {
-            host: 'localhost',
+        db = new Sequelize(process.env.DEV_DB_NAME, process.env.DEV_DB_USER, process.env.DEV_DB_PASSWORD, {
+            host: process.env.DEV_DB_HOST,
             dialect: 'postgres',
             logging: false,
-            port: 5432
+            port: process.env.DEV_DB_PORT
         });
     } else {
         throw new Error("Environment not set. Please set the ENVIRONMENT environment variable to either 'production' or 'development'.");
