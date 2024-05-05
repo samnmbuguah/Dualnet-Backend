@@ -62,6 +62,7 @@ async function trade(
   leverage,
   fundingRate,
   closeByProfit,
+  closeByDeviation
 ) {
   let firstAskPrice;
   let positionId = uuid.v4();
@@ -82,7 +83,7 @@ async function trade(
   try {
     let size = Math.floor(amount / (lastPrice * parseFloat(quantoMultiplier)));
     let spotAmount = size * quantoMultiplier * firstAskPrice;
-    spotAmount = spotAmount + (spotAmount * takerFeeRate);
+    spotAmount = spotAmount + spotAmount * takerFeeRate;
     console.log("Spot amount:", spotAmount);
     console.log("Size:", size);
     size = size * -1;
@@ -130,8 +131,11 @@ async function trade(
     let takerFee = futuresValue * parseFloat(futuresResponse.tkfr);
     futuresValue = futuresValue + takerFee;
     let amountIncurred = spotAmount + futuresValue;
-    let openingDifference = parseFloat(futuresResponse.fillPrice) - parseFloat(spotResponse.avgDealPrice);
-    let openingPercentageDifference = (openingDifference / parseFloat(spotResponse.avgDealPrice)) * 100;
+    let openingDifference =
+      parseFloat(futuresResponse.fillPrice) -
+      parseFloat(spotResponse.avgDealPrice);
+    let openingPercentageDifference =
+      (openingDifference / parseFloat(spotResponse.avgDealPrice)) * 100;
 
     const futuresBot = {
       userId: subClientId,
@@ -157,6 +161,7 @@ async function trade(
       accumulatedFunding: 0,
       openingDifference: openingPercentageDifference,
       profitThreshold: closeByProfit,
+      closeByDeviation: closeByDeviation,
     };
     await Bots.create(futuresBot);
     console.log("Futures bot created:", futuresBot);
@@ -183,6 +188,7 @@ async function trade(
       accumulatedFunding: 0,
       openingDifference: openingPercentageDifference,
       profitThreshold: closeByProfit,
+      closeByDeviation: closeByDeviation,
     };
     console.log("Spot bot created:", spotBot);
 
