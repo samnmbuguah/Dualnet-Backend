@@ -44,8 +44,6 @@ async function fetchAndLogPrices(pollPrices, io) {
 async function updateTickersAndPrecisions(pollPrices) {
   const records = await MatchingPairs.findAll({
     attributes: ["id", "precision", "fundingRate"],
-    where: { fundingRate: { [Op.gte]: 0.01 } },
-    order: [["fundingRate", "DESC"]],
     limit: 500,
   });
 
