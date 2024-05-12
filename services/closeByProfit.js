@@ -64,6 +64,7 @@ async function closeByProfit(io, bots) {
       closeByProfit: bot.profitThreshold,
       spotEntryPrice: bot.spotEntryPrice,
       futuresEntryPrice: bot.futuresEntryPrice,
+      closeByDeviation: bot.closeByDeviation,
     };
 
     // Add botData to the array for this user
