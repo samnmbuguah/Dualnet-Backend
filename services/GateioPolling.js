@@ -32,14 +32,15 @@ class PollPrices {
       try {
         const spotResponse = await getCurrentSpotPrice(ticker);
         const futuresResponse = await listFuturesOrderBook(this.settle, ticker);
+        const takerFeeRate = 0.00075 * 2;
 
         const spotPrice = parseFloat(spotResponse.lowestAsk);
         const futuresPrice = parseFloat(futuresResponse.bids[0].p);
 
         let valueDifference = futuresPrice - spotPrice;
         valueDifference = Math.round(valueDifference * Math.pow(10, this.amountPrecisions[index] + 2)) / Math.pow(10, this.amountPrecisions[index] + 2);
-
-        let percentageDifference = (valueDifference / spotPrice) * 100;
+        
+        let percentageDifference = (valueDifference / spotPrice) * 100 - takerFeeRate;
         percentageDifference = Math.round(percentageDifference * 10000) / 10000;
 
         await Scans.upsert({
