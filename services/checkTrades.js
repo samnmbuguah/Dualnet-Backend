@@ -27,15 +27,46 @@ async function checkTrades() {
 
     for (const bot of bots) {
       let balance = await fetchSpotBalance(bot.matchingPairId, bot.userId);
-      balance =balance.available;
-      const balanceInUsdt = balance.available * bot.currentPrice;
+      balance = parseFloat(balance.available);
+      const balanceInUsdt = balance * bot.currentPrice;
       const position = await fetchPosition(
         bot.settle,
         bot.matchingPairId,
         bot.userId
       );
-      const positionSize = position ? position.size : 0; // Handle undefined position
-      const botSize = bot.futuresSize;
+      const positionSize =position ? position.size : 0; // Handle undefined position
+      const futuresFullSize = -positionSize * bot.quantoMultiplier;
+
+      // Calculate the percentage difference between futuresFullSize and balance
+      const percentageDifference = Math.abs((futuresFullSize - balance) / balance) * 100;
+
+      // If the percentage difference is greater than 5%, call sellSpotPosition and closeShort
+      if (percentageDifference > 5) {
+        console.log(
+          "Selling spot and closing short due to percentage difference"
+        );
+        try {
+          await sellSpotPosition(
+            bot.matchingPairId,
+            bot.userId,
+            balance,
+            bot.positionId
+          );
+          console.log("Spot sold successfully");
+
+          await closeShort(
+            bot.matchingPairId,
+            bot.userId,
+            bot.futuresSize,
+            bot.positionId,
+            bot.quantoMultiplier
+          );
+          console.log("Short closed successfully");
+        } catch (error) {
+          console.error("Error during selling spot and closing short:", error);
+        }
+      }
+
       if (positionSize < 0 && balanceInUsdt < 1) {
         console.log("Closing short");
         try {
