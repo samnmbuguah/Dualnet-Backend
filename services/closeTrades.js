@@ -1,47 +1,46 @@
-const GateApi = require("gate-api");
-const client = new GateApi.ApiClient();
-const Bots = require("../models/BotsModel.js");
-const fetchSpotBalance = require("./fetchSpotBalance");
-const getApiCredentials = require("./getApiCredentials");
+  const GateApi = require("gate-api");
+  const client = new GateApi.ApiClient();
+  const Bots = require("../models/BotsModel.js");
+  const fetchSpotBalance = require("./fetchSpotBalance");
+  const getApiCredentials = require("./getApiCredentials");
 
-async function sellSpotAndLongFutures(
-  pair,
-  subClientId,
-  futuresSize = 0,
-  spotSize,
-  positionId,
-  multiplier,
-  reason = "No Reason Provided"
-) {
-  try {
-    const credentials = await getApiCredentials(subClientId);
-    if (!credentials) {
-      throw new Error("Could not fetch API credentials. Aborting trade.");
-    }
+  async function sellSpotAndLongFutures(
+    pair,
+    subClientId,
+    futuresSize = 0,
+    spotSize,
+    positionId,
+    multiplier,
+    reason = "No Reason Provided"
+  ) {
+    try {
+      const credentials = await getApiCredentials(subClientId);
+      if (!credentials) {
+        throw new Error("Could not fetch API credentials. Aborting trade.");
+      }
 
-    client.setApiKeySecret(credentials.apiKey, credentials.apiSecret);
+      client.setApiKeySecret(credentials.apiKey, credentials.apiSecret);
 
-    const spotApi = new GateApi.SpotApi(client);
-    const futuresApi = new GateApi.FuturesApi(client);
-    const order = new GateApi.Order();
-    order.account = "spot";
-    order.type = "market";
-    order.currencyPair = pair;
-    order.amount = spotSize;
-    order.side = "sell";
-    order.timeInForce = "ioc";
+      const spotApi = new GateApi.SpotApi(client);
+      const futuresApi = new GateApi.FuturesApi(client);
+      const order = new GateApi.Order();
+      order.account = "spot";
+      order.type = "market";
+      order.currencyPair = pair;
+      order.amount = spotSize;
+      order.side = "sell";
+      order.timeInForce = "ioc";
 
-    const baseCurrency = pair.split("_")[0];
-    const spotBalance = await fetchSpotBalance(baseCurrency, subClientId);
-    const availableSpotBalance = Number(spotBalance.available);
+      const baseCurrency = pair.split("_")[0];
+      const spotBalance = await fetchSpotBalance(baseCurrency, subClientId);
+      const availableSpotBalance = Number(spotBalance.available);
 
-    if (availableSpotBalance <= spotSize) {
-      order.amount = availableSpotBalance;
-    }
+      if (availableSpotBalance <= spotSize) {
+        order.amount = availableSpotBalance;
+      }
 
-    return spotApi
-      .createOrder(order)
-      .then(async (response) => {
+      try {
+        const response = await spotApi.createOrder(order);
         console.log("Spot sell order response", response.body);
 
         const amount = futuresSize / multiplier;
@@ -52,12 +51,12 @@ async function sellSpotAndLongFutures(
         futuresOrder.price = "0";
         futuresOrder.tif = "ioc";
 
-        futuresApi
-          .createFuturesOrder("usdt", futuresOrder)
-          .then((response) =>
-            console.log("Futures close order response", response.body)
-          )
-          .catch((error) => console.error(error.response));
+        try {
+          const futuresResponse = await futuresApi.createFuturesOrder("usdt", futuresOrder);
+          console.log("Futures close order response", futuresResponse.body);
+        } catch (error) {
+          console.error(error.response);
+        }
 
         await Bots.update(
           {
@@ -70,17 +69,15 @@ async function sellSpotAndLongFutures(
           }
         );
         return true;
-      })
-      .catch((error) => {
+      } catch (error) {
         console.error(error.response);
-        return false;
-      });
-  } catch (error) {
-    console.error("Error during trading:", error);
-    return false;
+        throw new Error('Error creating order');
+      }
+    } catch (error) {
+      console.error("Error during trading:", error);
+      return false;
+    }
   }
-}
-
 module.exports = sellSpotAndLongFutures;
 
 // const tradeData = {
