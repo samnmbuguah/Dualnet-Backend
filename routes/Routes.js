@@ -38,7 +38,17 @@ router.get('/generate-pdf/', verifyToken, generatePdfsForUsertype4Users); //for 
 router.get('/admin-commission/:user_id', verifyToken, adminCommissionCalculation);
 // router.get('/admin-temp-assets/', verifyToken, updateAdminTempAssets)
 
-router.post('/set-leverage', verifyToken, setLeverage);
+router.post('/set-leverage', verifyToken, async (req, res) => {
+    const { settle, contract, leverage = "1", subClientId } = req.body;
+    try {
+        const result = await setLeverage(settle, contract, leverage, subClientId);
+        res.status(200).json(result);
+    } catch (error) {
+        console.error('Error in setLeverage:', error.response ? error.response.data : error);
+        res.status(500).json({ message: 'Error setting leverage' });
+    }
+});
+
 router.post('/trade', verifyToken, async (req, res) => {
     const {
       pair,
