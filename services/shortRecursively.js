@@ -6,15 +6,15 @@ const fetchPosition = require("./getPosition");
 const ccxt = require("ccxt");
 
 async function shortRecursively(
-    pair,
-    entryPrice,
-    stopLoss,
-    amount,
-    lastPrice,
-    quantoMultiplier,
-    takerFeeRate,
-    subClientId,
-    leverage
+  pair,
+  entryPrice,
+  stopLoss,
+  amount,
+  lastPrice,
+  quantoMultiplier,
+  takerFeeRate,
+  subClientId,
+  leverage
 ) {
   try {
     const credentials = await getApiCredentials(subClientId);
@@ -22,28 +22,29 @@ async function shortRecursively(
       throw new Error("Could not fetch API credentials. Aborting trade.");
     }
 
-    client.setApiKeySecret(credentials.apiKey, credentials.apiSecret);
-  } catch (error) {
-    console.error(error.message);
-    return;
-  }
+    const exchange = new ccxt["gateio"]({
+      apiKey: credentials.apiKey,
+      secret: credentials.apiSecret,
+      options: {
+        defaultType: "future", // Ensure we are using futures trading
+      },
+    });
 
-  try {
-    let size = Math.floor(amount / (lastPrice * parseFloat(quantoMultiplier)));
-    size = size * -1;
+    let size = amount/lastPrice
 
     await setLeverage("usdt", pair, leverage, subClientId);
 
-    const futuresResponse = await createFuturesShortOrder(
-      "usdt",
+    const futuresResponse =  await exchange.createOrder(
       pair,
+      "limit",
+      "sell",
       size,
       entryPrice
     );
 
-    if (futuresResponse) {
+    if (order.status === "closed") {
       // Create a stop loss order with the same size
-      await createStopLossOrder("usdt", pair, stopLoss, size);
+      await exchange.createOrder(pair, "stop", "buy", size * -1, stopLossPrice);
 
       let position = await fetchPosition("usdt", pair, subClientId);
       let positionSize = position ? position.size : 0;
@@ -72,90 +73,97 @@ async function shortRecursively(
 }
 
 function createFuturesShortOrder(settle, contract, size, entryPrice) {
-    const futuresApi = new GateApi.FuturesApi(client);
-    console.log("Creating futures short order...");
-    const futuresOrder = new GateApi.FuturesOrder();
-    futuresOrder.contract = contract;
-    futuresOrder.size = size;
-    futuresOrder.price = entryPrice.toString(); // Limit order at entry price
-    futuresOrder.tif = "gtc"; // Good till cancelled
+  const futuresApi = new GateApi.FuturesApi(client);
+  console.log("Creating futures short order...");
+  const futuresOrder = new GateApi.FuturesOrder();
+  futuresOrder.contract = contract;
+  futuresOrder.size = size;
+  futuresOrder.price = entryPrice.toString(); // Limit order at entry price
+  futuresOrder.tif = "gtc"; // Good till cancelled
 
-    return futuresApi
-        .createFuturesOrder(settle, futuresOrder)
-        .then((response) => {
-            console.log("Futures short order created", response.body);
-            return response.body;
-        })
-        .catch((error) => {
-            console.error(error.response);
-        });
+  return futuresApi
+    .createFuturesOrder(settle, futuresOrder)
+    .then((response) => {
+      console.log("Futures short order created", response.body);
+      return response.body;
+    })
+    .catch((error) => {
+      console.error(error.response);
+    });
 }
 
 async function createTriggerLimitOrder(settle, contract, triggerPrice) {
-    const futuresApi = new GateApi.FuturesApi(client);
+  const futuresApi = new GateApi.FuturesApi(client);
 
-    const futuresPriceTriggeredOrder = new GateApi.FuturesPriceTriggeredOrder();
-    futuresPriceTriggeredOrder.contract = contract;
-    futuresPriceTriggeredOrder.triggerPrice = triggerPrice.toString(); // Trigger price
-    futuresPriceTriggeredOrder.orderPrice = triggerPrice.toString(); // Order price
-    futuresPriceTriggeredOrder.size = "1"; // Order size
-    futuresPriceTriggeredOrder.side = "sell"; // Order side
-    futuresPriceTriggeredOrder.orderType = "limit"; // Order type
-    futuresPriceTriggeredOrder.tif = "gtc"; // Good till cancelled
+  const futuresPriceTriggeredOrder = new GateApi.FuturesPriceTriggeredOrder();
+  futuresPriceTriggeredOrder.contract = contract;
+  futuresPriceTriggeredOrder.triggerPrice = triggerPrice.toString(); // Trigger price
+  futuresPriceTriggeredOrder.orderPrice = triggerPrice.toString(); // Order price
+  futuresPriceTriggeredOrder.size = "1"; // Order size
+  futuresPriceTriggeredOrder.side = "sell"; // Order side
+  futuresPriceTriggeredOrder.orderType = "limit"; // Order type
+  futuresPriceTriggeredOrder.tif = "gtc"; // Good till cancelled
 
-    return futuresApi
-        .createPriceTriggeredOrder(settle, futuresPriceTriggeredOrder)
-        .then((response) => {
-            console.log("Trigger limit order created", response.body);
-            return response.body;
-        })
-        .catch((error) => {
-            console.error(error.response);
-            throw error;
-        });
+  return futuresApi
+    .createPriceTriggeredOrder(settle, futuresPriceTriggeredOrder)
+    .then((response) => {
+      console.log("Trigger limit order created", response.body);
+      return response.body;
+    })
+    .catch((error) => {
+      console.error(error.response);
+      throw error;
+    });
 }
-
 
 async function createStopLossOrder(settle, contract, stopLossPrice, size) {
-    const futuresApi = new GateApi.FuturesApi(client);
+  const futuresApi = new GateApi.FuturesApi(client);
 
-    const futuresPriceTriggeredOrder = new GateApi.FuturesPriceTriggeredOrder();
-    futuresPriceTriggeredOrder.contract = contract;
-    futuresPriceTriggeredOrder.triggerPrice = stopLossPrice.toString(); // Trigger price
-    futuresPriceTriggeredOrder.orderPrice = "0"; // Market order
-    futuresPriceTriggeredOrder.size = (size * -1).toString(); // Order size, opposite of the short order
-    futuresPriceTriggeredOrder.side = "buy"; // Order side
-    futuresPriceTriggeredOrder.orderType = "market"; // Order type
-    futuresPriceTriggeredOrder.reduceOnly = true; // Reduce-only order
+  const futuresPriceTriggeredOrder = new GateApi.FuturesPriceTriggeredOrder();
+  futuresPriceTriggeredOrder.contract = contract;
+  futuresPriceTriggeredOrder.triggerPrice = stopLossPrice.toString(); // Trigger price
+  futuresPriceTriggeredOrder.orderPrice = "0"; // Market order
+  futuresPriceTriggeredOrder.size = (size * -1).toString(); // Order size, opposite of the short order
+  futuresPriceTriggeredOrder.side = "buy"; // Order side
+  futuresPriceTriggeredOrder.orderType = "market"; // Order type
+  futuresPriceTriggeredOrder.reduceOnly = true; // Reduce-only order
 
-    return futuresApi
-        .createPriceTriggeredOrder(settle, futuresPriceTriggeredOrder)
-        .then((response) => {
-            console.log("Stop loss order created", response.body);
-            return response.body;
-        })
-        .catch((error) => {
-            console.error(error.response);
-            throw error;
-        });
+  return futuresApi
+    .createPriceTriggeredOrder(settle, futuresPriceTriggeredOrder)
+    .then((response) => {
+      console.log("Stop loss order created", response.body);
+      return response.body;
+    })
+    .catch((error) => {
+      console.error(error.response);
+      throw error;
+    });
 }
 
-
-
-const pair = 'BTC_USDT';
+const pair = "BTC_USDT";
 const entryPrice = 67600;
 const stopLoss = 69100;
-const amount = 7;
-const lastPrice = 67700;
-const quantoMultiplier = '0.0001';
-const takerFeeRate = '0.00075';
+const amount = 4;
+const lastPrice = 67300;
+const quantoMultiplier = "0.0001";
+const takerFeeRate = "0.00075";
 const subClientId = 18;
 const leverage = 1;
 
-shortRecursively(pair, entryPrice, stopLoss, amount, lastPrice, quantoMultiplier, takerFeeRate, subClientId, leverage)
-    .then((result) => {
-        console.log('Short order created:', result);
-    })
-    .catch((error) => {
-        console.error('Error creating short order:', error);
-    });
+shortRecursively(
+  pair,
+  entryPrice,
+  stopLoss,
+  amount,
+  lastPrice,
+  quantoMultiplier,
+  takerFeeRate,
+  subClientId,
+  leverage
+)
+  .then((result) => {
+    console.log("Short order created:", result);
+  })
+  .catch((error) => {
+    console.error("Error creating short order:", error);
+  });
