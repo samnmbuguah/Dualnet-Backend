@@ -39,7 +39,7 @@ async function checkTrades() {
 
       // Calculate the percentage difference between futuresFullSize and balance
       const percentageDifference = Math.abs((futuresFullSize - balance) / balance) * 100;
-
+      const closingSize = positionSize * -1;
       // If the percentage difference is greater than 5%, call sellSpotPosition and closeShort
       if (percentageDifference > 5) {
         console.log(
@@ -57,11 +57,12 @@ async function checkTrades() {
           await closeShort(
             bot.matchingPairId,
             bot.userId,
-            bot.futuresSize,
+            closingSize,
             bot.positionId,
             bot.quantoMultiplier
           );
           console.log("Short closed successfully");
+          return;
         } catch (error) {
           console.error("Error during selling spot and closing short:", error);
         }
