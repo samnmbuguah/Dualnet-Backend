@@ -25,9 +25,10 @@ async function closeShort(
     const futuresOrder = new GateApi.FuturesOrder();
     futuresOrder.contract = pair;
     futuresOrder.settle = "usdt";
-    futuresOrder.size = amount;
+    futuresOrder.size = futuresSize;
     futuresOrder.price = "0";
     futuresOrder.tif = "ioc";
+    futuresOrder.reduceOnly = true;
 
     return futuresApi
       .createFuturesOrder("usdt", futuresOrder)
@@ -36,7 +37,7 @@ async function closeShort(
         await Bots.update(
           {
             isClose: true,
-            status: "No spot found, closed futures",
+            status: "No spot found, closed futures/liquidation",
           },
           {
             where: {
